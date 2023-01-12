@@ -1,0 +1,11 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Geometry x:Key="pawn_blackGeometry">F1 M45,45z M0,0z M22.5,9C20.29,9 18.5,10.79 18.5,13 18.5,13.89 18.79,14.71 19.28,15.38 17.33,16.5 16,18.59 16,21 16,23.03 16.94,24.84 18.41,26.03 15.41,27.09 11,31.58 11,39.5L34,39.5C34,31.58 29.59,27.09 26.59,26.03 28.06,24.84 29,23.03 29,21 29,18.59 27.67,16.5 25.72,15.38 26.21,14.71 26.5,13.89 26.5,13 26.5,10.79 24.71,9 22.5,9z</Geometry>
+  <DrawingGroup x:Key="pawn_blackDrawingGroup" ClipGeometry="M0,0 V45 H45 V0 H0 Z">
+    <GeometryDrawing Brush="#FF000000" Geometry="{StaticResource pawn_blackGeometry}">
+      <GeometryDrawing.Pen>
+        <Pen Brush="#FF000000" Thickness="1.5" StartLineCap="Round" EndLineCap="Round" LineJoin="Miter" />
+      </GeometryDrawing.Pen>
+    </GeometryDrawing>
+  </DrawingGroup>
+  <DrawingImage x:Key="pawn_blackDrawingImage" Drawing="{StaticResource pawn_blackDrawingGroup}" />
+</ResourceDictionary>

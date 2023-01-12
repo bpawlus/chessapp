@@ -1,0 +1,18 @@
+﻿@model ChessWebApp.Models.User
+
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="d-flex bd-highlight bg-dark text-white border-bottom box-shadow mb-3">
+    <div class="p-2 flex-grow-1 bd-highlight">Chess - Web App</div>
+    <div class="p-2 bd-highlight"> 
+        <form asp-controller="Home" asp-action="Logout" method="post">
+            <input id="logout" type="submit" value="Logout" class="btn-secondary" />
+        </form>
+    </div>
+</div>
+
+<div class="text-center">
+    <h1 class="display-2">Welcome, @Model.Name</h1>
+</div>
