@@ -31,8 +31,8 @@ namespace ChessApp
         {
             MessageBoxButton button = MessageBoxButton.OK;
             MessageBoxImage icon = MessageBoxImage.Information;
-            MessageBox.Show($"TODO ws: localhost login {login.Text} {password.Password.ToString()}", "Login", button, icon, MessageBoxResult.Yes);
-            owner.LoginCallback(Guid.NewGuid());
+
+            owner.LoginCallback(login.Text, password.Password.ToString());
             this.Close();
         }
     }

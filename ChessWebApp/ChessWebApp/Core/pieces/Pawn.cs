@@ -15,9 +15,9 @@ namespace ChessApp.game.pieces
         {
         }
 
-        protected override Dictionary<Tuple<int, int>, ChessboardScenario> GetRealMoves(IFigure[,] board)
+        public override List<Tuple<int, int, ChessboardScenario>> GetMovesWithScenarios(IFigure[,] board)
         {
-            Dictionary<Tuple<int, int>, ChessboardScenario> toRet = new Dictionary<Tuple<int, int>, ChessboardScenario>();
+            List<Tuple<int, int, ChessboardScenario>> toRet = new List<Tuple<int, int, ChessboardScenario>> ();
             Tuple<int, int> ij = FindMe(board);
 
             int ipos = ij.Item1;
@@ -35,14 +35,14 @@ namespace ChessApp.game.pieces
             {
                 if (board[rows[0], cols[0]] != null && board[rows[1], cols[1]] != null)
                 {
-                    ChessboardScenario scenario = new ChessboardScenario(board, Owner);
-                    scenario.moveScenario(ipos, jpos, rows[0], cols[0]);
+                    ChessboardScenario scenario = new ChessboardScenario(board, this);
+                    scenario.MoveScenario(ipos, jpos, rows[0], cols[0]);
                     if (rows[0] == 0 || rows[0] == 7)
                     {
                         IFigure figure = new Queen(Owner);
                         scenario.chessboardScenario[rows[0], cols[0]] = figure;
                     }
-                    toRet.Add(new Tuple<int, int>(rows[0], cols[0]), scenario);
+                    toRet.Add(new Tuple<int, int, ChessboardScenario>(rows[0], cols[0], scenario));
                 }
             }
 
@@ -53,14 +53,14 @@ namespace ChessApp.game.pieces
             {
                 if (board[rows[1], cols[1]] != null)
                 {
-                    ChessboardScenario scenario = new ChessboardScenario(board, Owner);
-                    scenario.moveScenario(ipos, jpos, rows[1], cols[1]);
+                    ChessboardScenario scenario = new ChessboardScenario(board, this);
+                    scenario.MoveScenario(ipos, jpos, rows[1], cols[1]);
                     if (rows[1] == 0 || rows[1] == 7)
                     {
                         IFigure figure = new Queen(Owner);
                         scenario.chessboardScenario[rows[1], cols[1]] = figure;
                     }
-                    toRet.Add(new Tuple<int, int>(rows[1], cols[1]), scenario);
+                    toRet.Add(new Tuple<int, int, ChessboardScenario>(rows[1], cols[1], scenario));
                 }
             }
 
@@ -78,14 +78,14 @@ namespace ChessApp.game.pieces
 
                         if (unknownFigure.Owner != Owner)
                         {
-                            ChessboardScenario scenario = new ChessboardScenario(board, Owner);
-                            scenario.moveScenario(ipos, jpos, rows[m], cols[m]);
+                            ChessboardScenario scenario = new ChessboardScenario(board, this);
+                            scenario.MoveScenario(ipos, jpos, rows[m], cols[m]);
                             if (rows[m] == 0 || rows[m] == 7)
                             {
                                 IFigure figure = new Queen(Owner);
                                 scenario.chessboardScenario[rows[m], cols[m]] = figure;
                             }
-                            toRet.Add(new Tuple<int, int>(rows[m], cols[m]), scenario);
+                            toRet.Add(new Tuple<int, int, ChessboardScenario>(rows[m], cols[m], scenario));
                         }
                     }
                 }

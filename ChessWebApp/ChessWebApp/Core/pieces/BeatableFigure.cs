@@ -1,13 +1,13 @@
 ﻿using ChessApp.game;
 using ChessApp.game.pieces;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace ChessWebApp.Core.pieces
 {
     public abstract class BeatableFigure : IFigure
     {
-        public virtual bool Beatable => true;
 
         protected ChessPlayer _owner;
         public ChessPlayer Owner => _owner;
@@ -15,54 +15,7 @@ namespace ChessWebApp.Core.pieces
         protected bool _moved = false;
         public virtual bool Moved { get => _moved; set => _moved = value; }
 
-        protected abstract Dictionary<Tuple<int, int>, ChessboardScenario> GetRealMoves(IFigure[,] board);
-
-        public virtual Dictionary<Tuple<int, int>, ChessboardScenario> GetAvailableMoves(IFigure[,] board, bool ignoreCheck)
-        {
-            Dictionary<Tuple<int, int>, ChessboardScenario> empty = new Dictionary<Tuple<int, int>, ChessboardScenario>();
-            return GetAvailableMoves(empty, board, ignoreCheck);
-        }
-
-        public Dictionary<Tuple<int, int>, ChessboardScenario> GetAvailableMoves(Dictionary<Tuple<int, int>, ChessboardScenario> prepared, IFigure[,] board, bool ignoreCheck)
-        {
-            Dictionary<Tuple<int, int>, ChessboardScenario> allMoves = GetRealMoves(board);
-            foreach (Tuple<int, int> ij in allMoves.Keys)
-            {
-                int j = ij.Item1;
-                int i = ij.Item2;
-
-                if (ignoreCheck || (!allMoves[ij].isCheckScenario(_owner) && !board[i, j].Beatable))
-                {
-                    prepared.Add(ij, allMoves[ij]);
-                }
-            }
-            return prepared;
-        }
-
-        public ChessboardScenario MakeMove(IFigure[,] board, Tuple<int, int> id)
-        {
-            Dictionary<Tuple<int, int>, ChessboardScenario> moves = GetAvailableMoves(board, false);
-            if(moves.ContainsKey(id))
-            {
-                this.Moved = true;
-                return moves[id];
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public HashSet<Tuple<int, int>> GetMoves(IFigure[,] board, bool ignoreCheck)
-        {
-            HashSet<Tuple<int, int>> toRet = new HashSet<Tuple<int, int>>();
-            Dictionary<Tuple<int, int>, ChessboardScenario> moves = GetAvailableMoves(board, ignoreCheck);
-            foreach(Tuple<int, int> key in moves.Keys)
-            {
-                toRet.Add(key);
-            }
-            return toRet;
-        }
+        public abstract List<Tuple<int, int, ChessboardScenario>> GetMovesWithScenarios(IFigure[,] board);
 
         public Tuple<int, int> FindMe(IFigure[,] board)
         {
@@ -77,6 +30,11 @@ namespace ChessWebApp.Core.pieces
                 }
             }
             return null;
+        }
+
+        public virtual List<Tuple<int, int, ChessboardScenario>> GetMovesCheckSave(IFigure[,] board)
+        {
+            return new List<Tuple<int, int, ChessboardScenario>>();
         }
 
         public BeatableFigure(ChessPlayer owner)

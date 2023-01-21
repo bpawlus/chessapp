@@ -12,6 +12,23 @@ namespace ChessWebApp.Core
         private static Dictionary<User, ChessGameController> games = new Dictionary<User, ChessGameController>();
         private static bool hosting = false;
 
+        public static Tuple<ChessGameController, ChessPlayer> findGameOf(User user)
+        {
+            ChessGameController controller = games[user];
+            if(controller != null)
+            {
+                if(controller.TopPlayer.user == user)
+                {
+                    return new Tuple<ChessGameController, ChessPlayer>(controller, controller.TopPlayer);
+                }
+                else if (controller.BottomPlayer.user == user)
+                {
+                    return new Tuple<ChessGameController, ChessPlayer>(controller, controller.BottomPlayer);
+                }
+            }
+            return null;
+        }
+
         public static void Queue(User user, WebSocket webSocket)
         {
             queuedSockets.Add(user, webSocket);
@@ -28,43 +45,50 @@ namespace ChessWebApp.Core
             {
                 await Task.Delay(5000);
 
-                if (queuedSockets.Count >= 2)
+                try
                 {
-                    GameFinder.hosting = true;
-                    KeyValuePair<User, WebSocket> playerSocket1 = queuedSockets.First();
-                    queuedSockets.Remove(playerSocket1.Key);
-
-                    KeyValuePair<User, WebSocket> playerSocket2 = queuedSockets.First();
-                    queuedSockets.Remove(playerSocket2.Key);
-
-                    byte[] data1 = Encoding.ASCII.GetBytes($"You will be playing vs {playerSocket2.Key.Id}");
-                    await playerSocket1.Value.SendAsync(data1, WebSocketMessageType.Text, true, CancellationToken.None);
-
-                    byte[] data2 = Encoding.ASCII.GetBytes($"You will be playing vs {playerSocket1.Key.Id}");
-                    await playerSocket2.Value.SendAsync(data2, WebSocketMessageType.Text, true, CancellationToken.None);
-
-                    Random rnd = new Random();
-                    ChessPlayer playerTop;
-                    ChessPlayer playerBot;
-
-                    int i = rnd.Next(2);
-                    if (i == 1)
+                    if (queuedSockets.Count >= 2)
                     {
-                        playerTop = new ChessPlayer(playerSocket1.Key, playerSocket1.Value, true);
-                        playerBot = new ChessPlayer(playerSocket2.Key, playerSocket2.Value, false);
-                        Console.WriteLine($"WS Info - {playerSocket1.Key} will be playing with {playerSocket2.Key}");
-                    }
-                    else
-                    {
-                        playerTop = new ChessPlayer(playerSocket2.Key, playerSocket2.Value, true);
-                        playerBot = new ChessPlayer(playerSocket1.Key, playerSocket1.Value, false);
-                        Console.WriteLine($"WS Info - {playerSocket2.Key} will be playing with {playerSocket1.Key}");
-                    }
-                    
-                    ChessGameController newGame = new ChessGameController(playerTop, playerBot);
-                    newGame.StartGame();
+                        GameFinder.hosting = true;
+                        KeyValuePair<User, WebSocket> playerSocket1 = queuedSockets.First();
+                        queuedSockets.Remove(playerSocket1.Key);
 
-                    GameFinder.hosting = false;
+                        KeyValuePair<User, WebSocket> playerSocket2 = queuedSockets.First();
+                        queuedSockets.Remove(playerSocket2.Key);
+
+                        Random rnd = new Random();
+                        ChessPlayer playerTop;
+                        ChessPlayer playerBot;
+
+                        int i = rnd.Next(2);
+                        if (i == 1)
+                        {
+                            playerTop = new ChessPlayer(playerSocket1.Key, playerSocket1.Value, true);
+                            playerBot = new ChessPlayer(playerSocket2.Key, playerSocket2.Value, false);
+                            Console.WriteLine($"WS Info - {playerSocket1.Key.Name} will be playing with {playerSocket2.Key.Name}");
+                        }
+                        else
+                        {
+                            playerTop = new ChessPlayer(playerSocket2.Key, playerSocket2.Value, true);
+                            playerBot = new ChessPlayer(playerSocket1.Key, playerSocket1.Value, false);
+                            Console.WriteLine($"WS Info - {playerSocket2.Key.Name} will be playing with {playerSocket1.Key.Name}");
+                        }
+
+                        string messageTo1 = WSMessageHandler.GetGameCustomMessage($"You will be playing vs {playerSocket2.Key.Name}");
+                        string messageTo2 = WSMessageHandler.GetGameCustomMessage($"You will be playing vs {playerSocket1.Key.Name}");
+
+                        await WSMessageHandler.SendAsync(playerSocket1.Value, messageTo1);
+                        await WSMessageHandler.SendAsync(playerSocket2.Value, messageTo2);
+
+                        ChessGameController newGame = new ChessGameController(playerTop, playerBot);
+                        games.Add(playerTop.user, newGame);
+                        games.Add(playerBot.user, newGame);
+                        GameFinder.hosting = false;
+                    }
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine($"Hosting Exception: {e.ToString()}");
                 }
             }
         }

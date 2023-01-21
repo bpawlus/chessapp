@@ -14,44 +14,39 @@ namespace ChessApp.game.pieces
         {
         }
 
-        protected override Dictionary<Tuple<int, int>, ChessboardScenario> GetRealMoves(IFigure[,] board)
+        public override List<Tuple<int, int, ChessboardScenario>> GetMovesWithScenarios(IFigure[,] board)
         {
-            Dictionary<Tuple<int, int>, ChessboardScenario> toRet = new Dictionary<Tuple<int, int>, ChessboardScenario>();
+            List<Tuple<int, int, ChessboardScenario>> toRet = new List<Tuple<int, int, ChessboardScenario>> ();
             Tuple<int, int> ij = FindMe(board);
 
             int ipos = ij.Item1;
             int jpos = ij.Item2;
 
-            bool[] hadBeateable = new bool[4] { false, false, false, false };
-            for (int n = 1; n < ChessGameController.chessboardSize; n++)
+            int[] rows = new int[8] { ipos + 2, ipos + 2, ipos - 2, ipos - 2, ipos + 1, ipos + 1, ipos - 1, ipos - 1 };
+            int[] cols = new int[8] { jpos + 1, jpos - 1, jpos + 1, jpos - 1, jpos + 2, jpos - 2, jpos + 2, jpos - 2 };
+            for (int m = 0; m < rows.Length; m++)
             {
-                int[] rows = new int[8] { ipos + n, ipos + n, ipos - n, ipos - n, ipos + n, ipos - n, ipos, ipos };
-                int[] cols = new int[8] { jpos + n, jpos - n, jpos + n, jpos - n, jpos, jpos, jpos + n, jpos - n };
-                for (int m = 0; m < rows.Length; m++)
+                if (
+                    rows[m] >= 0 && rows[m] < ChessGameController.chessboardSize &&
+                    cols[m] >= 0 && cols[m] < ChessGameController.chessboardSize
+                )
                 {
-                    if (
-                        !hadBeateable[m] &&
-                        rows[m] >= 0 && rows[m] < ChessGameController.chessboardSize &&
-                        cols[m] >= 0 && cols[m] < ChessGameController.chessboardSize
-                    )
+                    if (board[rows[m], cols[m]] != null)
                     {
-                        if (board[rows[m], cols[m]] != null)
+                        IFigure unknownFigure = board[rows[m], cols[m]];
+
+                        if (unknownFigure.Owner == Owner)
                         {
-                            IFigure unknownFigure = board[rows[m], cols[m]];
-                            hadBeateable[m] = true;
-
-                            if (unknownFigure.Owner == Owner)
-                            {
-                                continue;
-                            }
+                            continue;
                         }
-
-                        ChessboardScenario scenario = new ChessboardScenario(board, Owner);
-                        scenario.moveScenario(ipos, jpos, rows[m], cols[m]);
-                        toRet.Add(new Tuple<int, int>(rows[m], cols[m]), scenario);
                     }
+
+                    ChessboardScenario scenario = new ChessboardScenario(board, this);
+                    scenario.MoveScenario(ipos, jpos, rows[m], cols[m]);
+                    toRet.Add(new Tuple<int, int, ChessboardScenario>(rows[m], cols[m], scenario));
                 }
             }
+
             return toRet;
 
         }

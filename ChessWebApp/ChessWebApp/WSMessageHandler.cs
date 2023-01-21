@@ -5,12 +5,13 @@ using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.Differencing;
 using ChessApp.game.pieces;
 using ChessWebApp.Core;
+using System.Net.WebSockets;
 
 namespace ChessWebApp
 {
     public static class WSMessageHandler
     {
-        public static Tuple<bool, string, string> HandleLoginMessage(string message)
+        public static Tuple<bool, string, string> HandleUserLoginMessage(string message)
         {
             bool correct = false;
             string name = "";
@@ -36,7 +37,7 @@ namespace ChessWebApp
             bool correct = false;
             string reason = "";
 
-            string filter = @"LO:(\w*)";
+            string filter = @"LO:(.*)";
             Regex rg = new Regex(filter);
             MatchCollection mc = Regex.Matches(message, filter);
             if (mc.Count == 1)
@@ -63,8 +64,6 @@ namespace ChessWebApp
             }
             return new Tuple<bool>(correct);
         }
-
-
 
         public static Tuple<bool, int, int, int, int> HandleGameMoveMessage(string message)
         {
@@ -145,38 +144,91 @@ namespace ChessWebApp
             return new Tuple<bool>(correct);
         }
 
-        public static string MessageChessboardData(IFigure[,] figures)
+        public static Tuple<bool, string> HandleExit(string message)
         {
-            string header = "GBRD:";
+            bool correct = false;
+            string reason = "";
+
+            string filter = @"EXIT:(.*)";
+            Regex rg = new Regex(filter);
+            MatchCollection mc = Regex.Matches(message, filter);
+            if (mc.Count == 1)
+            {
+                foreach (Match match in mc)
+                {
+                    correct = true;
+                    reason = match.Groups[1].Value;
+                }
+            }
+            return new Tuple<bool, string>(correct, reason);
+        }
+
+
+        public static string GetGameChessboardData(IFigure[,] figures)
+        {
+            string header = "GBRD: ";
             for(int i = 0; i < figures.GetLength(0); i++)
             {
-                for (int j = 0; j < figures.GetLength(1), i++)
+                for (int j = 0; j < figures.GetLength(1); j++)
                 {
-                    header += ChessPiecesEnumTranslator.TrasnslateFigureToShort(figures[i, j]);
-                    header += " ";
+                    short number = ChessPiecesEnumTranslator.TrasnslateFigureToShort(figures[i, j]);
+                    if (number != 0) 
+                    {
+                        header += $"{number},{i},{j} ";
+                    }
                 }
             }
 
             return header;
         }
 
-        public static string MessageGetMovesData(HashSet<Tuple<int, int>> moves)
+        public static string GetGameMovesData(HashSet<Tuple<int, int>> moves)
         {
-            string header = "GMOV:";
+            string header = "GMOV: ";
             foreach (var item in moves)
             {
-                header += item.Item1;
-                header += ",";
-                header += item.Item2;
-                header += " ";
+                header += $"{item.Item1},{item.Item2} ";
             }
 
             return header;
         }
 
-        public static string MessageChessboardMessage(string message)
+        public static string GetGameCustomMessage(string message)
         {
             return "GMES:" + message;
+        }
+
+        public static void SendServiceLoginOk(WebSocket ws)
+        {
+            string header = "L OK";
+            SendAsync(ws, header);
+        }
+
+        public async static Task SendAsync(WebSocket ws, string message)
+        {
+            await ws.SendAsync(Encoding.ASCII.GetBytes(message), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+
+        public async static Task<string> ReceiveAsync(WebSocket ws)
+        {
+            var buffer = new byte[1024];
+
+            try
+            {
+                var receiveResult = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+                if (receiveResult.MessageType == WebSocketMessageType.Close)
+                {
+                    return $"EXIT:{receiveResult.CloseStatusDescription}";
+                }
+                else
+                    return Encoding.ASCII.GetString(buffer, 0, receiveResult.Count);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("WS Connection error: " + e.ToString());
+                return "";
+            }
         }
     }
 }

@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChessApp"
         mc:Ignorable="d"
-        Title="PNET - Chess Application" Height="675" Width="1200">
+        Title="PNET - Chess Application" Height="675" Width="675"
+        Closing="ApplicationExit">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="24" />
@@ -27,7 +28,6 @@
             <MenuItem Height="24" Padding="10,0,10,0" Header="Game">
                 <MenuItem x:Name="menuGameFind" Header="Find game" Click="FindGame" IsEnabled="False"/>
                 <MenuItem x:Name="menuGameGiveUp" Header="Give up" Click="GiveUp" IsEnabled="False"/>
-                <MenuItem x:Name="l" Header="Game log" Click="GameLog" IsEnabled="False"/>
                 <MenuItem x:Name="menuGameOpponent" Header="Opponent's details" Click="EnemyDetails" IsEnabled="False"/>
             </MenuItem>
             <MenuItem Height="24" Padding="10,0,10,0" Header="Settings">

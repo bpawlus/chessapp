@@ -1,6 +1,7 @@
 ﻿using ChessApp.game.pieces;
 using ChessWebApp;
 using ChessWebApp.Core;
+using ChessWebApp.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -17,25 +18,25 @@ namespace ChessApp.game
         private readonly char[] boardColNames = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
         public static readonly int chessboardSize = 8;
         public ChessboardScenario currentScenario;
-        public ChessPlayer _topPlayer;
-        public ChessPlayer _bottomPlayer;
-        public bool topPlayerTurn = false;
+        public ChessPlayer TopPlayer { get; }
+        public ChessPlayer BottomPlayer { get; }
+        public ChessPlayer CurrentPlayer { get; set; }
+        public ChessPlayer NotCurrentPlayer { get; set; }
+        bool end;
+        private List<Tuple<int, int, ChessboardScenario>> scenarios;
 
         public ChessGameController(ChessPlayer topPlayer, ChessPlayer bottomPlayer)
         {
             IFigure[,] chessboard = new IFigure[chessboardSize, chessboardSize];
-            for(int i = 0; i < chessboardSize; i++)
+            for (int i = 0; i < chessboardSize; i++)
             {
                 for (int j = 0; j < chessboardSize; j++)
                 {
-                    chessboard[i,j] = null;
+                    chessboard[i, j] = null;
                 }
             }
 
-            _topPlayer = topPlayer;
-            _bottomPlayer = bottomPlayer;
-
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
                 chessboard[1, i] = topPlayer.pawnFigures[i];
                 chessboard[6, i] = bottomPlayer.pawnFigures[i];
@@ -65,121 +66,132 @@ namespace ChessApp.game
             chessboard[0, 4] = topPlayer.kingFigure;
             chessboard[7, 4] = bottomPlayer.kingFigure;
 
-            currentScenario = new ChessboardScenario(new IFigure[chessboardSize, chessboardSize], bottomPlayer);
+            TopPlayer = CurrentPlayer = topPlayer;
+            BottomPlayer = NotCurrentPlayer = bottomPlayer;
+
+            currentScenario = new ChessboardScenario(chessboard, null);
+            UpdateGameState();
         }
 
-        public async Task StartGame()
+        private void conclude(string info, ChessPlayer winner)
         {
-            var topPlayerListener = _topPlayer.ListenForRequests();
-            var bottomPlayerListener = _bottomPlayer.ListenForRequests();
-            var gameListener = new List<Task<string>> { topPlayerListener, bottomPlayerListener };
-            bool end = false;
+            Console.WriteLine($"WS Game Info - ({TopPlayer.user.Name} vs {BottomPlayer.user.Name} - {info} - {winner.user.Name} won!");
+            end = true;
+        }
 
-            while (!end)
+        private void UpdateGameState()
+        {
+            if (!end)
             {
-                _topPlayer.SendToPlayer(WSMessageHandler.MessageChessboardData(currentScenario.chessboardScenario));
-                _bottomPlayer.SendToPlayer(WSMessageHandler.MessageChessboardData(currentScenario.chessboardScenario));
+                string board = WSMessageHandler.GetGameChessboardData(currentScenario.chessboardScenario);
+                TopPlayer.SendToPlayer(board);
+                BottomPlayer.SendToPlayer(board);
+                scenarios = currentScenario.GetAllTruePlayerMoves(CurrentPlayer);
 
-                if (currentScenario.isStalemateScenario(currentScenario.player))
+                if (scenarios.Count() == 0)
                 {
-                    if (currentScenario.isCheckScenario(currentScenario.player))
+                    if (currentScenario.IsCheckScenario(CurrentPlayer))
                     {
-                        //szach mat
-                        end = true;
-                        break;
+                        conclude("Checkmate", NotCurrentPlayer);
+
                     }
                     else
                     {
-                        //pat
-                        end = true;
-                        break;
+                        conclude("Stalemate", NotCurrentPlayer);
                     }
                 }
-                else
-                {
-                    bool nextStage = false;
-                    ChessPlayer currentPlayer = topPlayerTurn ? _topPlayer : _bottomPlayer;
-                    ChessPlayer notCurrentPlayer = topPlayerTurn ? _bottomPlayer : _topPlayer;
-                    while (!nextStage)
-                    {
-                        Task<string> finishedTask = await Task.WhenAny(gameListener);
 
-                        Tuple<bool, int, int, int, int> gameMoveMessage = WSMessageHandler.HandleGameMoveMessage(finishedTask.Result);
-                        Tuple<bool, int, int> gameGetMoveMessage = WSMessageHandler.HandleGameGetMoveMessage(finishedTask.Result);
-                        Tuple<bool> gameGiveUp = WSMessageHandler.HandleGameGiveUpMessage(finishedTask.Result);
-                        Tuple<bool> gameOpponentDet = WSMessageHandler.HandleGameOppDetMessage(finishedTask.Result);
-
-                        if (gameMoveMessage.Item1)
-                        {
-                            if ((finishedTask == topPlayerListener && topPlayerTurn) || (finishedTask == bottomPlayerListener && !topPlayerTurn))
-                            {
-                                int rowo = gameMoveMessage.Item2;
-                                int colo = gameMoveMessage.Item3;
-                                int rown = gameMoveMessage.Item4;
-                                int coln = gameMoveMessage.Item5;
-                                var moves = currentScenario.chessboardScenario[rowo, colo].GetAvailableMoves(currentScenario.chessboardScenario, false);
-                                Tuple<int, int> move = new Tuple<int, int>(rown, coln);
-                                if (moves.ContainsKey(move))
-                                {
-                                    currentScenario = moves[move];
-                                    nextStage = true;
-                                }
-                            }
-                            else
-                            {
-                                notCurrentPlayer.SendToPlayer(WSMessageHandler.MessageChessboardMessage("This is not your turn!"));
-                            }
-                                
-                            continue;
-                        }
-
-                        if (gameGetMoveMessage.Item1)
-                        {
-                            if ((finishedTask == topPlayerListener && topPlayerTurn) || (finishedTask == bottomPlayerListener && !topPlayerTurn))
-                            {
-                                int row = gameGetMoveMessage.Item2;
-                                int col = gameGetMoveMessage.Item3;
-                                var moves = currentScenario.chessboardScenario[row, col].GetMoves(currentScenario.chessboardScenario, false);
-                                currentPlayer.SendToPlayer(WSMessageHandler.MessageGetMovesData(moves));
-                            }
-                            else
-                            {
-                                notCurrentPlayer.SendToPlayer(WSMessageHandler.MessageChessboardMessage("This is not your turn!"));
-                            }
-
-                            continue;
-                        }
-
-                        if (gameGiveUp.Item1)
-                        {
-                            end = true;
-                            continue;
-                        }
-
-                        if (gameOpponentDet.Item1)
-                        {
-                            if (finishedTask == topPlayerListener)
-                            {
-                                _topPlayer.SendToPlayer("User name - " + _bottomPlayer.user.Name + "\nUser description - " + _bottomPlayer.user.Description);
-                            }
-                            else if (finishedTask == bottomPlayerListener)
-                            {
-                                _bottomPlayer.SendToPlayer("User name - " + _topPlayer.user.Name + "\nUser description - " + _topPlayer.user.Description);
-                            }
-
-                            continue;
-                        }
-
-                        topPlayerTurn = !topPlayerTurn;
-                    }
-                }
+                CurrentPlayer = CurrentPlayer == BottomPlayer ? TopPlayer : BottomPlayer;
+                NotCurrentPlayer = NotCurrentPlayer == BottomPlayer ? BottomPlayer : TopPlayer;
             }
-            gameListener[0].Dispose();
-            gameListener[1].Dispose();
         }
 
+        public void HandleMessageGameMove(ChessPlayer player, Tuple<bool, int, int, int, int> gameMoveMessage)
+        {
+            if (CurrentPlayer == player)
+            {
+                int rowo = gameMoveMessage.Item2;
+                int colo = gameMoveMessage.Item3;
+                int rown = gameMoveMessage.Item4;
+                int coln = gameMoveMessage.Item5;
+                IFigure chosenFigure = currentScenario.chessboardScenario[rowo, colo];
 
+                if (chosenFigure != null)
+                {
+                    foreach (var moveWithScenario in scenarios)
+                    {
+                        if (
+                            moveWithScenario.Item3.Issuer == chosenFigure &&
+                            moveWithScenario.Item1 == rown &&
+                            moveWithScenario.Item2 == coln
+                        )
+                        {
+                            currentScenario = moveWithScenario.Item3;
+                            UpdateGameState();
+                            return;
+                        }
+                    }
+                }
 
-        //public IFigure[] getPiecesThatCanBeOnField(ChessboardField field)
+                player.SendToPlayer(WSMessageHandler.GetGameCustomMessage("This move is unavailable!"));
+            }
+            else
+            {
+                player.SendToPlayer(WSMessageHandler.GetGameCustomMessage("This is not your turn!"));
+            }
+        }
+
+        public void HandleMessageGameGetMove(ChessPlayer player, Tuple<bool, int, int> gameGetMoveMessage)
+        {
+            if (CurrentPlayer == player)
+            {
+                int row = gameGetMoveMessage.Item2;
+                int col = gameGetMoveMessage.Item3;
+                IFigure chosenFigure = currentScenario.chessboardScenario[row, col];
+
+                if (chosenFigure != null)
+                {
+                    var moves = new HashSet<Tuple<int, int>>();
+                    foreach (var moveWithScenario in scenarios)
+                    {
+                        if (moveWithScenario.Item3.Issuer == chosenFigure)
+                        {
+                            moves.Add(new Tuple<int, int>(moveWithScenario.Item1, moveWithScenario.Item2));
+                        }
+                    }
+                    player.SendToPlayer(WSMessageHandler.GetGameMovesData(moves));
+                }
+
+                player.SendToPlayer(WSMessageHandler.GetGameCustomMessage("This move is unavailable!"));
+            }
+            else
+            {
+                player.SendToPlayer(WSMessageHandler.GetGameCustomMessage("This is not your turn!"));
+            }
+        }
+
+        public void HandleGameGiveUp(ChessPlayer player, Tuple<bool> gameGiveUp)
+        {
+            if (player == TopPlayer)
+            {
+                conclude($"Surrendered by {TopPlayer.user.Name}", BottomPlayer);
+            }
+            else if (player == BottomPlayer)
+            {
+                conclude($"Surrendered by {BottomPlayer.user.Name}", TopPlayer);
+            }
+        }
+
+        public void HandleGameOppDet(ChessPlayer player, Tuple<bool> gameOpponentDet)
+        {
+            if (player == TopPlayer)
+            {
+                player.SendToPlayer("User name - " + BottomPlayer.user.Name + "\nUser description - " + BottomPlayer.user.Description);
+            }
+            else if (player == BottomPlayer)
+            {
+                player.SendToPlayer("User name - " + TopPlayer.user.Name + "\nUser description - " + TopPlayer.user.Description);
+            }
+        }
     }
 }

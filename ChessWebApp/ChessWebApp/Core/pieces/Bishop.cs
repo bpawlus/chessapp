@@ -14,9 +14,9 @@ namespace ChessApp.game.pieces
         {
         }
 
-        protected override Dictionary<Tuple<int, int>, ChessboardScenario> GetRealMoves(IFigure[,] board)
+        public override List<Tuple<int, int, ChessboardScenario>> GetMovesWithScenarios(IFigure[,] board)
         {
-            Dictionary<Tuple<int, int>, ChessboardScenario> toRet = new Dictionary<Tuple<int, int>, ChessboardScenario>();
+            List<Tuple<int, int, ChessboardScenario>> toRet = new List<Tuple<int, int, ChessboardScenario>> ();
             Tuple<int, int> ij = FindMe(board);
             
             int ipos = ij.Item1;
@@ -46,9 +46,9 @@ namespace ChessApp.game.pieces
                             } 
                         }
 
-                        ChessboardScenario scenario = new ChessboardScenario(board, Owner);
-                        scenario.moveScenario(ipos, jpos, rows[m], cols[m]);
-                        toRet.Add(new Tuple<int, int>(rows[m], cols[m]), scenario);
+                        ChessboardScenario scenario = new ChessboardScenario(board, this);
+                        scenario.MoveScenario(ipos, jpos, rows[m], cols[m]);
+                        toRet.Add(new Tuple<int, int, ChessboardScenario>(rows[m], cols[m], scenario));
                     }
                 }
             }

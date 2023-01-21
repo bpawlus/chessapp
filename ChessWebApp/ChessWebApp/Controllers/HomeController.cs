@@ -11,6 +11,7 @@ using System.Net.WebSockets;
 using System.Net;
 using System.Text;
 using ChessWebApp.Core;
+using ChessApp.game;
 
 namespace ChessWebApp.Controllers
 {
@@ -116,9 +117,8 @@ namespace ChessWebApp.Controllers
                 var buffer = new byte[1024];
                 try
                 {
-                    var receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                    string receiveVal = Encoding.ASCII.GetString(buffer, 0, receiveResult.Count);
-                    Tuple<bool, string, string> receivedMessage = WSMessageHandler.HandleLoginMessage(receiveVal);
+                    var receiveResult = await WSMessageHandler.ReceiveAsync(webSocket);
+                    Tuple<bool, string, string> receivedMessage = WSMessageHandler.HandleUserLoginMessage(receiveResult);
 
                     if (receivedMessage.Item1)
                     {
@@ -128,6 +128,7 @@ namespace ChessWebApp.Controllers
                         {
                             var ele = ans.ToArray().ElementAt(0);
                             Console.WriteLine($"WS Info - User {receivedMessage.Item2} logged in!");
+                            WSMessageHandler.SendServiceLoginOk(webSocket);
                             await ServeClient(webSocket, ele);
                             return;
                         }
@@ -140,7 +141,7 @@ namespace ChessWebApp.Controllers
                     }
                     else
                     {
-                        Console.WriteLine($"WS Info - INVALID LOGIN REQUEST: {receiveVal}");
+                        Console.WriteLine($"WS Info - INVALID LOGIN REQUEST: {receiveResult}");
                         await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "ERROR: Invalid login request!", CancellationToken.None);
                         return;
                     }
@@ -155,31 +156,6 @@ namespace ChessWebApp.Controllers
             {
                 HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             }
-
-            /*if (HttpContext.WebSockets.IsWebSocketRequest)
-            {
-                using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-                var rand = new Random();
-
-                while (true)
-                {
-                    long r = rand.NextInt64(0, 10);
-                    byte[] data = Encoding.ASCII.GetBytes($"Hello world! Chess: {r}");
-                    await webSocket.SendAsync(data, WebSocketMessageType.Text, true, CancellationToken.None);
-                    await Task.Delay(1000);
-
-                    if (r == 7)
-                    {
-                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "random closing", CancellationToken.None);
-
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            }*/
         }
 
         private async Task ServeClient(WebSocket webSocket, User user)
@@ -189,21 +165,61 @@ namespace ChessWebApp.Controllers
             {
                 try
                 {
-                    var receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                    string receiveVal = Encoding.ASCII.GetString(buffer, 0, receiveResult.Count);
-                    Tuple<bool> receivedMessage = WSMessageHandler.HandleUserFindGameMessage(receiveVal);
+                    var receiveResult = await WSMessageHandler.ReceiveAsync(webSocket);
+
+                    Tuple<bool> receivedMessage = WSMessageHandler.HandleUserFindGameMessage(receiveResult);
                     if (receivedMessage.Item1)
                     {
-                        Console.WriteLine($"WS Info - User {user.Id} wants to find a game!");
+                        Console.WriteLine($"WS Info - User {user.Name} wants to find a game!");
                         GameFinder.Queue(user, webSocket);
+                        continue;
                     }
-                    Tuple<bool, string> receivedMessage2 = WSMessageHandler.HandleUserLogoutMessage(receiveVal);
+
+                    Tuple<bool, string> receivedMessage2 = WSMessageHandler.HandleUserLogoutMessage(receiveResult);
                     if (receivedMessage2.Item1)
                     {
                         GameFinder.Unqueue(user);
-                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Logged out!", CancellationToken.None);
-                        Console.WriteLine($"WS Info - User {user.Id} logged out!");
+                        await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, $"Logged out! - Reason {receivedMessage2.Item2}", CancellationToken.None);
+                        Console.WriteLine($"WS Info - User {user.Name} logged out! ({receivedMessage2.Item2})");
                         return;
+                    }
+
+                    Tuple<bool, int, int, int, int> gameMoveMessage = WSMessageHandler.HandleGameMoveMessage(receiveResult);
+                    Tuple<bool, int, int> gameGetMoveMessage = WSMessageHandler.HandleGameGetMoveMessage(receiveResult);
+                    Tuple<bool> gameGiveUp = WSMessageHandler.HandleGameGiveUpMessage(receiveResult);
+                    Tuple<bool> gameOpponentDet = WSMessageHandler.HandleGameOppDetMessage(receiveResult);
+
+                    if (gameMoveMessage.Item1 || gameGetMoveMessage.Item1 || gameGiveUp.Item1 || gameOpponentDet.Item1)
+                    {
+                        Tuple<ChessGameController, ChessPlayer> game = GameFinder.findGameOf(user);
+                        if (game != null)
+                        {
+                            if(gameMoveMessage.Item1)
+                            {
+                                game.Item1.HandleMessageGameMove(game.Item2, gameMoveMessage);
+                                continue;
+                            }
+                            else if(gameGetMoveMessage.Item1)
+                            {
+                                game.Item1.HandleMessageGameGetMove(game.Item2, gameGetMoveMessage);
+                                continue;
+                            }
+                            else if (gameGiveUp.Item1)
+                            {
+                                game.Item1.HandleGameGiveUp(game.Item2, gameGiveUp);
+                                continue;
+                            }
+                            else if (gameOpponentDet.Item1)
+                            {
+                                game.Item1.HandleGameOppDet(game.Item2, gameOpponentDet);
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"WS Info - User {user.Id} logged out!");
+                            continue;
+                        }
                     }
                 }
                 catch (Exception e)

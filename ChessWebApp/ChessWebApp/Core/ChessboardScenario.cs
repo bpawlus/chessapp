@@ -1,99 +1,116 @@
 ﻿using ChessApp.game;
 using ChessApp.game.pieces;
 using ChessWebApp.Core.pieces;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 
 namespace ChessWebApp.Core
 {
     public class ChessboardScenario
     {
         public IFigure[,] chessboardScenario;
-        private IFigure[,] beatenField;
-        public ChessPlayer player;
+        public bool kingBeaten = false;
+        public IFigure Issuer { get; }
 
-        public ChessboardScenario(IFigure[,] baseChessboard, ChessPlayer player)
+        public ChessboardScenario(IFigure[,] baseChessboard, IFigure issuer)
         {
+            Issuer = issuer;
             chessboardScenario = new IFigure[ChessGameController.chessboardSize, ChessGameController.chessboardSize];
             for (int i = 0; i < ChessGameController.chessboardSize; i++)
             {
                 for (int j = 0; j < ChessGameController.chessboardSize; j++)
                 {
                     chessboardScenario[i, j] = baseChessboard[i, j];
-                    beatenField[i, j] = null;
                 }
             }
         }
 
-        public void moveScenario(int oldRow, int oldCol, int newRow, int newCol)
+        public void MoveScenario(int oldRow, int oldCol, int newRow, int newCol)
         {
             if(chessboardScenario[newRow, newCol] != null)
             {
-                beatenField[newRow, newCol] = chessboardScenario[newRow, newCol];
+                if(chessboardScenario[newRow, newCol] is King)
+                {
+                    kingBeaten = true;
+                }
             }
             chessboardScenario[newRow, newCol] = chessboardScenario[oldRow, oldCol];
             chessboardScenario[oldRow, oldCol] = null;
         }
 
-        public void swapScenario(int oldRow, int oldCol, int newRow, int newCol)
+        public List<Tuple<int, int, ChessboardScenario>> GetAllPlayerMoves(bool topPlayer)
         {
-            IFigure temp = chessboardScenario[newRow, newCol];
-            chessboardScenario[newRow, newCol] = chessboardScenario[oldRow, oldCol];
-            chessboardScenario[oldRow, oldCol] = temp;
-        }
-
-        public bool isCheckScenario(ChessPlayer player)
-        {
-            Tuple<int, int> playerKingPos = null;
-            HashSet<Tuple<int, int>> allEnemyMoves = new HashSet<Tuple<int, int>>();
+            List<Tuple<int, int, ChessboardScenario>> allMyMoves = new List<Tuple<int, int, ChessboardScenario>>();
 
             for (int i = 0; i < ChessGameController.chessboardSize; i++)
             {
                 for (int j = 0; j < ChessGameController.chessboardSize; j++)
                 {
-                    if (chessboardScenario[i,j] is KingFigure && chessboardScenario[i, j].Owner == player)
+                    if (chessboardScenario[i, j] != null && chessboardScenario[i, j].Owner.isTop == topPlayer)
                     {
-                        playerKingPos = new Tuple<int, int>(i, j);
-                    }
-                    else if(chessboardScenario[i, j] != null && chessboardScenario[i, j].Owner != player)
-                    {
-                        HashSet<Tuple<int, int>> enemyMoves = chessboardScenario[i, j].GetMoves(chessboardScenario, true);
-                        allEnemyMoves.UnionWith(enemyMoves);
+                        var myMoves = chessboardScenario[i, j].GetMovesWithScenarios(chessboardScenario);
+                        allMyMoves.Concat(myMoves);
                     }
                 }
             }
 
-            if(playerKingPos == null)
+            return allMyMoves;
+        }
+
+        public List<Tuple<int, int, ChessboardScenario>> GetAllPlayerCheckSaveMoves(bool topPlayer)
+        {
+            List<Tuple<int, int, ChessboardScenario>> allMyMoves = new List<Tuple<int, int, ChessboardScenario>>();
+
+            for (int i = 0; i < ChessGameController.chessboardSize; i++)
             {
-                throw new Exception("King not found exception");
-            }
-            else if(allEnemyMoves.Contains(playerKingPos))
-            {
-                return true;
+                for (int j = 0; j < ChessGameController.chessboardSize; j++)
+                {
+                    if (chessboardScenario[i, j] != null && chessboardScenario[i, j].Owner.isTop == topPlayer)
+                    {
+                        var myMoves = chessboardScenario[i, j].GetMovesCheckSave(chessboardScenario);
+                        allMyMoves.Concat(myMoves);
+                    }
+                }
             }
 
+            return allMyMoves;
+        }
+
+        public List<Tuple<int, int, ChessboardScenario>> GetAllTruePlayerMoves(ChessPlayer player)
+        {
+            List<Tuple<int, int, ChessboardScenario>> allMyMoves = GetAllPlayerMoves(player.isTop);
+            List<Tuple<int, int, ChessboardScenario>> trueMyMoves = new List<Tuple<int, int, ChessboardScenario>>();
+            if (IsCheckScenario(player))
+            {
+                allMyMoves.Concat(GetAllPlayerCheckSaveMoves(player.isTop));
+            }
+
+            foreach (var moveWithScenario in allMyMoves)
+            {
+                if (!moveWithScenario.Item3.IsCheckScenario(player) && !moveWithScenario.Item3.kingBeaten)
+                {
+                    trueMyMoves.Add(moveWithScenario);
+                }
+            }
+
+            return allMyMoves;
+        }
+
+        public bool IsCheckScenario(ChessPlayer player)
+        {
+            List<Tuple<int, int, ChessboardScenario>> allEnemyMoves = GetAllPlayerMoves(!player.isTop);
+                
+            foreach (var moveWithScenario in allEnemyMoves)
+            {
+                if (moveWithScenario.Item3.kingBeaten)
+                {
+                    return true;
+                }
+            }
+ 
             return false;
         }
 
-        public bool isStalemateScenario(ChessPlayer player)
-        {
-            for (int i = 0; i < ChessGameController.chessboardSize; i++)
-            {
-                for (int j = 0; j < ChessGameController.chessboardSize; j++)
-                {
-                    if (chessboardScenario[i, j] != null && chessboardScenario[i, j].Owner == player)
-                    {
-                        var myMoves = chessboardScenario[i, j].GetAvailableMoves(chessboardScenario, false);
-                        foreach(var entry in myMoves)
-                        {
-                            if(!entry.Value.isCheckScenario(player))
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return true;
-        }
     }
 }

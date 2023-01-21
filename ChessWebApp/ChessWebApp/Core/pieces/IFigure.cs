@@ -9,11 +9,6 @@ namespace ChessApp.game.pieces
 {
     public interface IFigure
     {
-        public bool Beatable
-        {
-            get;
-        }
-
         public ChessPlayer Owner
         {
             get;
@@ -25,10 +20,8 @@ namespace ChessApp.game.pieces
             set;
         }
 
-        public Dictionary<Tuple<int, int>, ChessboardScenario> GetAvailableMoves(IFigure[,] board, bool ignoreCheck);
-        public Dictionary<Tuple<int, int>, ChessboardScenario> GetAvailableMoves(Dictionary<Tuple<int, int>, ChessboardScenario> prepared, IFigure[,] board, bool ignoreCheck);
-        public ChessboardScenario MakeMove(IFigure[,] board, Tuple<int, int> id);
-        public HashSet<Tuple<int, int>> GetMoves(IFigure[,] board, bool ignoreCheck);
+        public List<Tuple<int, int, ChessboardScenario>> GetMovesWithScenarios(IFigure[,] board);
         public Tuple<int, int> FindMe(IFigure[,] board);
+        public List<Tuple<int, int, ChessboardScenario>> GetMovesCheckSave(IFigure[,] board);
     }
 }

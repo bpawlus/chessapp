@@ -7,4 +7,8 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /s /y &quot;$(SolutionDir)ChessApp\resources&quot; &quot;$(TargetDir)resources&quot;" />
+  </Target>
+
 </Project>

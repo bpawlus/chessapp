@@ -37,7 +37,6 @@ namespace ChessWebApp.Models
         public short VariantPawn7 { get; set; }
         public short VariantPawn8 { get; set; }
 
-        public int UserChessboardId { get; set; }
         public ICollection<Game>? GamesTop { get; set; }
         public ICollection<Game>? GamesBottom { get; set; }
     }

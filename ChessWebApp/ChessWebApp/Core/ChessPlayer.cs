@@ -48,25 +48,10 @@ namespace ChessWebApp.Core
             }
         }
 
-        public async Task<string> ListenForRequests()
+        public async Task SendToPlayer(string message)
         {
-            var buffer = new byte[1024];
-
-            try
-            {
-                var receiveResult = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                return Encoding.ASCII.GetString(buffer, 0, receiveResult.Count);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("WS Connection error: " + e.ToString());
-                return "";
-            }
-        }
-
-        public void SendToPlayer(string message)
-        {
-            _ws.SendAsync(Encoding.ASCII.GetBytes(message), WebSocketMessageType.Text, true, CancellationToken.None); 
+            await WSMessageHandler.SendAsync(_ws, message);
+            Console.WriteLine($"WS Game Info - Sent {message} to {user.Name}");
         }
     }
 }

@@ -10,15 +10,15 @@ using System.Threading.Tasks;
 
 namespace ChessApp.game.pieces
 {
-    public class King : KingFigure
+    public class King : BeatableFigure
     {
         public King(ChessPlayer owner) : base(owner)
         {
         }
 
-        protected override Dictionary<Tuple<int, int>, ChessboardScenario> GetRealMoves(IFigure[,] board)
+        public override List<Tuple<int, int, ChessboardScenario>> GetMovesWithScenarios(IFigure[,] board)
         {
-            Dictionary<Tuple<int, int>, ChessboardScenario> toRet = new Dictionary<Tuple<int, int>, ChessboardScenario>();
+            List<Tuple<int, int, ChessboardScenario>> toRet = new List<Tuple<int, int, ChessboardScenario>> ();
             Tuple<int, int> ij = FindMe(board);
 
             int ipos = ij.Item1;
@@ -43,27 +43,25 @@ namespace ChessApp.game.pieces
                         }
                     }
 
-                    ChessboardScenario scenario = new ChessboardScenario(board, Owner);
-                    scenario.moveScenario(ipos, jpos, rows[m], cols[m]);
-                    toRet.Add(new Tuple<int, int>(rows[m], cols[m]), scenario);
+                    ChessboardScenario scenario = new ChessboardScenario(board, this);
+                    scenario.MoveScenario(ipos, jpos, rows[m], cols[m]);
+                    toRet.Add(new Tuple<int, int, ChessboardScenario>(rows[m], cols[m], scenario));
                 }
             }
 
             return toRet;
         }
 
-        public override Dictionary<Tuple<int, int>, ChessboardScenario> GetAvailableMoves(IFigure[,] board, bool ignoreCheck)
+        public override List<Tuple<int, int, ChessboardScenario>> GetMovesCheckSave(IFigure[,] board)
         {
-            Dictionary<Tuple<int, int>,ChessboardScenario> toRet = base.GetAvailableMoves(board, ignoreCheck);
+            List<Tuple<int, int, ChessboardScenario>> toRet = base.GetMovesCheckSave(board);
 
             if (!Moved) {
-                ChessboardScenario checkScenario = new ChessboardScenario(board, Owner);
+                ChessboardScenario checkScenario = new ChessboardScenario(board, this);
                 Tuple<int, int> ij = FindMe(board);
 
                 int ipos = ij.Item1;
                 int jpos = ij.Item2;
-
-                bool check = checkScenario.isCheckScenario(Owner);
 
                 bool empty1 = true;
                 for(int i = 1; i < jpos; i++)
@@ -86,32 +84,30 @@ namespace ChessApp.game.pieces
                 }
 
                 if (
-                    !check &&
                     (board[ipos, 0] != null && board[ipos, 0] is Rook && !board[ipos, 0].Moved) &&
                     empty1
                 )
                 {
-                    ChessboardScenario scenario = new ChessboardScenario(board, Owner);
-                    scenario.moveScenario(ipos, jpos, ipos, jpos - 2);
-                    scenario.moveScenario(ipos, 0, ipos, jpos - 1);
+                    ChessboardScenario scenario = new ChessboardScenario(board, this);
+                    scenario.MoveScenario(ipos, jpos, ipos, jpos - 2);
+                    scenario.MoveScenario(ipos, 0, ipos, jpos - 1);
 
-                    toRet.Add(new Tuple<int, int>(ipos, jpos - 2), scenario);
+                    toRet.Add(new Tuple<int, int, ChessboardScenario>(ipos, jpos - 2, scenario));
                 }
 
                 if (
-                    !check &&
                     (board[ipos, 7] != null && board[ipos, 7] is Rook && !board[ipos, 7].Moved) &&
                     empty2
                 )
                 {
-                    ChessboardScenario scenario = new ChessboardScenario(board, Owner);
-                    scenario.moveScenario(ipos, jpos, ipos + 2, jpos);
-                    scenario.moveScenario(ipos, 7, ipos, jpos + 1);
+                    ChessboardScenario scenario = new ChessboardScenario(board, this);
+                    scenario.MoveScenario(ipos, jpos, ipos + 2, jpos);
+                    scenario.MoveScenario(ipos, 7, ipos, jpos + 1);
 
-                    toRet.Add(new Tuple<int, int>(ipos, jpos + 2), scenario);
+                    toRet.Add(new Tuple<int, int, ChessboardScenario>(ipos, jpos + 2, scenario));
                 }
             }
-            return GetAvailableMoves(toRet, board, ignoreCheck);
+            return toRet;
         }
     }
 }
