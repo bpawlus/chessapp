@@ -13,6 +13,7 @@ using System.Text;
 using ChessWebApp.Core;
 using ChessApp.game;
 using System.Numerics;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ChessWebApp.Controllers
 {
@@ -29,18 +30,146 @@ namespace ChessWebApp.Controllers
             _context = context;
         }
 
+        private Dictionary<string, List<SelectListItem>> GetSelectListItems(User user)
+        {
+            var toRet = new Dictionary<string, List<SelectListItem>>();
+
+            short[] selected = new short[]{
+                        user.VariantKing, user.VariantQueen,
+                        user.VariantBishopLeft, user.VariantBishopRight,
+                        user.VariantKnightLeft, user.VariantKnightRight,
+                        user.VariantRookLeft, user.VariantRookRight,
+                        user.VariantPawn1, user.VariantPawn2, user.VariantPawn3, user.VariantPawn4,
+                        user.VariantPawn5, user.VariantPawn6, user.VariantPawn7, user.VariantPawn8 
+            };
+          
+
+            string[] keys = new string[]{
+                        "VariantKing", "VariantQueen",
+                        "VariantBishopLeft", "VariantBishopRight",
+                        "VariantKnightLeft", "VariantKnightRight",
+                        "VariantRookLeft", "VariantRookRight",
+                        "VariantPawn1", "VariantPawn2", "VariantPawn3", "VariantPawn4",
+                        "VariantPawn5", "VariantPawn6", "VariantPawn7", "VariantPawn8"
+            };
+
+            for (int i = 0; i < keys.Length; i++)
+            {
+                List<SelectListItem> items = new List<SelectListItem>();
+                foreach (ChessPiecesEnum cp in (ChessPiecesEnum[])Enum.GetValues(typeof(ChessPiecesEnum)))
+                {
+                    if (cp != ChessPiecesEnum.Null)
+                    {
+                        short val = (short)cp;
+                        if (val != selected[i])
+                        {
+                            items.Add(new SelectListItem { Text = cp.ToString(), Value = val.ToString() });
+                        }
+                        else
+                        {
+                            items.Add(new SelectListItem { Text = cp.ToString(), Value = val.ToString(), Selected = true });
+                        }
+                    }
+                }
+                toRet.Add(keys[i], items);
+            }
+
+            return toRet;
+        }
         public IActionResult Index()
         {
             var id = HttpContext.Session.GetInt32(SessionUserId);
-            var user = HttpContext.Session.GetString(SessionUserName);
-            if (id != null && user != null)
+            var name = HttpContext.Session.GetString(SessionUserName);
+            if (id != null && name != null)
             {
                 var ans = _context.User.Where(dbuser => dbuser.Id == id);
                 var ele = ans.ToArray().ElementAt(0);
+
+                var elements = GetSelectListItems(ele);
+                ViewBag.VariantPawn1 = elements["VariantPawn1"];
+                ViewBag.VariantPawn2 = elements["VariantPawn2"];
+                ViewBag.VariantPawn3 = elements["VariantPawn3"];
+                ViewBag.VariantPawn4 = elements["VariantPawn4"];
+                ViewBag.VariantPawn5 = elements["VariantPawn5"];
+                ViewBag.VariantPawn6 = elements["VariantPawn6"];
+                ViewBag.VariantPawn7 = elements["VariantPawn7"];
+                ViewBag.VariantPawn8 = elements["VariantPawn8"];
+
+                ViewBag.VariantKing = elements["VariantKing"];
+                ViewBag.VariantQueen = elements["VariantQueen"];
+                ViewBag.VariantBishopLeft = elements["VariantBishopLeft"];
+                ViewBag.VariantBishopRight = elements["VariantBishopRight"];
+                ViewBag.VariantKnightLeft = elements["VariantKnightLeft"];
+                ViewBag.VariantKnightRight = elements["VariantKnightRight"];
+                ViewBag.VariantRookLeft = elements["VariantRookLeft"];
+                ViewBag.VariantRookRight = elements["VariantRookRight"];
+
                 return View(ele);
             }
  
             return RedirectToAction(nameof(Login));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditBoard([Bind(
+                        "VariantKing", "VariantQueen",
+                        "VariantBishopLeft", "VariantBishopRight",
+                        "VariantKnightLeft", "VariantKnightRight",
+                        "VariantRookLeft", "VariantRookRight",
+                        "VariantPawn1", "VariantPawn2", "VariantPawn3", "VariantPawn4",
+                        "VariantPawn5", "VariantPawn6", "VariantPawn7", "VariantPawn8"
+            )] User user)
+        {
+            int id = (int)HttpContext.Session.GetInt32(SessionUserId);
+
+            if (id != null)
+            {
+                user.Id = id;
+                try
+                {
+                    using (var db = _context)
+                    {
+                        db.User.Attach(user);
+                        db.Entry(user).Property(x => x.VariantPawn1).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantPawn2).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantPawn3).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantPawn4).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantPawn5).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantPawn6).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantPawn7).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantPawn8).IsModified = true;
+
+                        db.Entry(user).Property(x => x.VariantKing).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantQueen).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantBishopLeft).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantBishopRight).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantRookLeft).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantRookRight).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantKnightLeft).IsModified = true;
+                        db.Entry(user).Property(x => x.VariantKnightRight).IsModified = true;
+                        db.SaveChanges();
+                    }
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!UserExists(user.Id))
+                    {
+                        return RedirectToAction(nameof(Index));
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool UserExists(int id)
+        {
+            return _context.User.Any(e => e.Id == id);
         }
 
         public IActionResult Login()
