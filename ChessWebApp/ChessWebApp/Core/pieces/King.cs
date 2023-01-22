@@ -74,7 +74,7 @@ namespace ChessApp.game.pieces
                 }
 
                 bool empty2 = true;
-                for (int i = ipos+1; i < 7; i++)
+                for (int i = jpos + 1; i < 7; i++)
                 {
                     if (board[ipos, i] != null)
                     {
@@ -101,7 +101,7 @@ namespace ChessApp.game.pieces
                 )
                 {
                     ChessboardScenario scenario = new ChessboardScenario(board, this);
-                    scenario.MoveScenario(ipos, jpos, ipos + 2, jpos);
+                    scenario.MoveScenario(ipos, jpos, ipos, jpos + 2);
                     scenario.MoveScenario(ipos, 7, ipos, jpos + 1);
 
                     toRet.Add(new Tuple<int, int, ChessboardScenario>(ipos, jpos + 2, scenario));

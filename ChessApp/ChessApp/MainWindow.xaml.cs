@@ -67,7 +67,10 @@ namespace ChessApp
                 RegisterName(canvas.Name, canvas);
                 canvas.MouseLeftButtonDown += new MouseButtonEventHandler(delegate (Object obj, MouseButtonEventArgs args)
                 {
-                    WSMessageHandler.SendGameMoveMessage(ws, selectedFigure.Row, selectedFigure.Column, highlight.Item1, highlight.Item2);
+                    if (selectedFigure != null)
+                    {
+                        WSMessageHandler.SendGameMoveMessage(ws, selectedFigure.Row, selectedFigure.Column, highlight.Item1, highlight.Item2);
+                    }
                 });
                 Grid.SetColumn(canvas, highlight.Item2 + 1);
                 Grid.SetRow(canvas, highlight.Item1 + 1);
@@ -80,6 +83,7 @@ namespace ChessApp
         private void RefreshBoard()
         {
             selectedFigure = null;
+            highlights.Clear();
             RefreshHighlights();
 
             for (int i = 0; i < figureSize; i++)

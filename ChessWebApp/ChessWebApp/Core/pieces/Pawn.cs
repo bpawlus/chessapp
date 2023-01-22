@@ -23,7 +23,7 @@ namespace ChessApp.game.pieces
             int ipos = ij.Item1;
             int jpos = ij.Item2;
 
-            int o = Owner.isTop ? -1 : 1;
+            int o = Owner.isTop ? 1 : -1;
             int[] rows = new int[4] { ipos + o * 2, ipos + o, ipos + o, ipos + o, };
             int[] cols = new int[4] { jpos, jpos, jpos - 1, jpos + 1 };
 
@@ -33,7 +33,7 @@ namespace ChessApp.game.pieces
                 cols[0] >= 0 && cols[0] < ChessGameController.chessboardSize
             )
             {
-                if (board[rows[0], cols[0]] != null && board[rows[1], cols[1]] != null)
+                if (board[rows[0], cols[0]] == null && board[rows[1], cols[1]] == null)
                 {
                     ChessboardScenario scenario = new ChessboardScenario(board, this);
                     scenario.MoveScenario(ipos, jpos, rows[0], cols[0]);
@@ -51,7 +51,7 @@ namespace ChessApp.game.pieces
                 cols[1] >= 0 && cols[1] < ChessGameController.chessboardSize
             )
             {
-                if (board[rows[1], cols[1]] != null)
+                if (board[rows[1], cols[1]] == null)
                 {
                     ChessboardScenario scenario = new ChessboardScenario(board, this);
                     scenario.MoveScenario(ipos, jpos, rows[1], cols[1]);

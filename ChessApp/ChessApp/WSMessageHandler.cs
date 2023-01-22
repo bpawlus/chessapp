@@ -131,7 +131,7 @@ namespace ChessApp
                 foreach (Match match in mc)
                 {
                     int ro = Int16.Parse(match.Groups[1].Value);
-                    int co = Int16.Parse(match.Groups[1].Value);
+                    int co = Int16.Parse(match.Groups[2].Value);
                     moves.Add(new Tuple<int, int>(ro, co));
                 }
             }

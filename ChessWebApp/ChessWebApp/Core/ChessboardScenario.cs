@@ -12,6 +12,7 @@ namespace ChessWebApp.Core
         public IFigure[,] chessboardScenario;
         public bool kingBeaten = false;
         public IFigure Issuer { get; }
+        public List<IFigure> moved = new List<IFigure>();
 
         public ChessboardScenario(IFigure[,] baseChessboard, IFigure issuer)
         {
@@ -35,6 +36,8 @@ namespace ChessWebApp.Core
                     kingBeaten = true;
                 }
             }
+
+            moved.Add(chessboardScenario[oldRow, oldCol]);
             chessboardScenario[newRow, newCol] = chessboardScenario[oldRow, oldCol];
             chessboardScenario[oldRow, oldCol] = null;
         }
@@ -50,7 +53,7 @@ namespace ChessWebApp.Core
                     if (chessboardScenario[i, j] != null && chessboardScenario[i, j].Owner.isTop == topPlayer)
                     {
                         var myMoves = chessboardScenario[i, j].GetMovesWithScenarios(chessboardScenario);
-                        allMyMoves.Concat(myMoves);
+                        allMyMoves.AddRange(myMoves);
                     }
                 }
             }
@@ -69,7 +72,7 @@ namespace ChessWebApp.Core
                     if (chessboardScenario[i, j] != null && chessboardScenario[i, j].Owner.isTop == topPlayer)
                     {
                         var myMoves = chessboardScenario[i, j].GetMovesCheckSave(chessboardScenario);
-                        allMyMoves.Concat(myMoves);
+                        allMyMoves.AddRange(myMoves);
                     }
                 }
             }
@@ -81,9 +84,10 @@ namespace ChessWebApp.Core
         {
             List<Tuple<int, int, ChessboardScenario>> allMyMoves = GetAllPlayerMoves(player.isTop);
             List<Tuple<int, int, ChessboardScenario>> trueMyMoves = new List<Tuple<int, int, ChessboardScenario>>();
-            if (IsCheckScenario(player))
+
+            if (!IsCheckScenario(player))
             {
-                allMyMoves.Concat(GetAllPlayerCheckSaveMoves(player.isTop));
+                allMyMoves.AddRange(GetAllPlayerCheckSaveMoves(player.isTop));
             }
 
             foreach (var moveWithScenario in allMyMoves)
@@ -94,7 +98,7 @@ namespace ChessWebApp.Core
                 }
             }
 
-            return allMyMoves;
+            return trueMyMoves;
         }
 
         public bool IsCheckScenario(ChessPlayer player)

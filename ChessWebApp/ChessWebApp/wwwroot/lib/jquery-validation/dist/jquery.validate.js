@@ -531,7 +531,7 @@ $.extend( $.validator, {
 				} );
 			}
 			if ( this.settings.showErrors ) {
-				this.settings.showErrors.call( this, this.errorMap, this.errorList );
+				this.settings.showErrors.call( this.errorMap, this.errorList );
 			} else {
 				this.defaultShowErrors();
 			}

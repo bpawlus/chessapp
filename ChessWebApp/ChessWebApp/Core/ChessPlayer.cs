@@ -10,6 +10,8 @@ namespace ChessWebApp.Core
 {
     public class ChessPlayer
     {
+        public static readonly bool DISABLE_WS_FOR_DEBUG = false;
+
         public IFigure kingFigure;
         public IFigure queenFigure;
         public IFigure[] bishopFigures = new IFigure[2];
@@ -50,7 +52,9 @@ namespace ChessWebApp.Core
 
         public async Task SendToPlayer(string message)
         {
-            await WSMessageHandler.SendAsync(_ws, message);
+            if(!DISABLE_WS_FOR_DEBUG) {
+                await WSMessageHandler.SendAsync(_ws, message);
+            }
             Console.WriteLine($"WS Game Info - Sent {message} to {user.Name}");
         }
     }

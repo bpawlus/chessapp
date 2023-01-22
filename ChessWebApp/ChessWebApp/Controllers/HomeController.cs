@@ -12,6 +12,7 @@ using System.Net;
 using System.Text;
 using ChessWebApp.Core;
 using ChessApp.game;
+using System.Numerics;
 
 namespace ChessWebApp.Controllers
 {
@@ -194,7 +195,8 @@ namespace ChessWebApp.Controllers
                         Tuple<ChessGameController, ChessPlayer> game = GameFinder.findGameOf(user);
                         if (game != null)
                         {
-                            if(gameMoveMessage.Item1)
+                            Console.WriteLine($"WS Game Info - Handling {receiveResult} from {user.Name}");
+                            if (gameMoveMessage.Item1)
                             {
                                 game.Item1.HandleMessageGameMove(game.Item2, gameMoveMessage);
                                 continue;

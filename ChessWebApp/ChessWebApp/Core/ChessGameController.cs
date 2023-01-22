@@ -75,7 +75,7 @@ namespace ChessApp.game
 
         private void conclude(string info, ChessPlayer winner)
         {
-            Console.WriteLine($"WS Game Info - ({TopPlayer.user.Name} vs {BottomPlayer.user.Name} - {info} - {winner.user.Name} won!");
+            Console.WriteLine($"WS Game Info - ({TopPlayer.user.Name} vs {BottomPlayer.user.Name}) - {info} - {winner.user.Name} won!");
             end = true;
         }
 
@@ -86,6 +86,9 @@ namespace ChessApp.game
                 string board = WSMessageHandler.GetGameChessboardData(currentScenario.chessboardScenario);
                 TopPlayer.SendToPlayer(board);
                 BottomPlayer.SendToPlayer(board);
+
+                CurrentPlayer = CurrentPlayer == BottomPlayer ? TopPlayer : BottomPlayer;
+                NotCurrentPlayer = NotCurrentPlayer == BottomPlayer ? TopPlayer : BottomPlayer;
                 scenarios = currentScenario.GetAllTruePlayerMoves(CurrentPlayer);
 
                 if (scenarios.Count() == 0)
@@ -93,16 +96,12 @@ namespace ChessApp.game
                     if (currentScenario.IsCheckScenario(CurrentPlayer))
                     {
                         conclude("Checkmate", NotCurrentPlayer);
-
                     }
                     else
                     {
                         conclude("Stalemate", NotCurrentPlayer);
                     }
                 }
-
-                CurrentPlayer = CurrentPlayer == BottomPlayer ? TopPlayer : BottomPlayer;
-                NotCurrentPlayer = NotCurrentPlayer == BottomPlayer ? BottomPlayer : TopPlayer;
             }
         }
 
@@ -127,6 +126,10 @@ namespace ChessApp.game
                         )
                         {
                             currentScenario = moveWithScenario.Item3;
+                            foreach (var figure in moveWithScenario.Item3.moved)
+                            {
+                                figure.Moved = true;
+                            }
                             UpdateGameState();
                             return;
                         }
@@ -160,6 +163,7 @@ namespace ChessApp.game
                         }
                     }
                     player.SendToPlayer(WSMessageHandler.GetGameMovesData(moves));
+                    return;
                 }
 
                 player.SendToPlayer(WSMessageHandler.GetGameCustomMessage("This move is unavailable!"));
