@@ -7,13 +7,22 @@
 
 <script type="text/javascript">
      window.onload = function() {
-        var changer = document.getElementById("VariantPawn1Change")
-        changer.onchange = function()
-        {
-            document.getElementById("VariantPawn1Display").src = "/resources/black_knight.png"
-        }
+        var names = @Html.Raw(Json.Serialize(@ViewBag.keys));
+        var pictures = @Html.Raw(Json.Serialize(@ViewBag.pictures));
+
+        names.forEach(name =>
+            {
+                var changer = document.getElementById(name);
+                changer.onchange = function () {
+                    var value = changer.value;
+                    document.getElementById(name + 'Display').src = "/resources/"+pictures[value];
+                }
+            document.getElementById(name + 'Display').src = "/resources/" + pictures[changer.value];
+            }
+        )
      }
 </script>
+
 
 
 
@@ -28,164 +37,179 @@
 
 <div class="text-center">
     <h1 class="display-2">Welcome, @Model.Name</h1>
-</div>
 
-<form asp-controller="Home" asp-action="EditBoard" method="post">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>
-                    <img id="VariantPawn1Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/black_pawn.png" />
-                    <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn1)</figcaption>
-                </th>
-                <th>
-                    <img id="VariantPawn2Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/black_pawn.png" />
-                    <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn2)</figcaption>
-                </th>
-                <th>
-                    <img id="VariantPawn3Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/black_pawn.png" />
-                    <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn3)</figcaption>
-                </th>
-                <th>
-                    <img id="VariantPawn4Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/black_pawn.png" />
-                    <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn4)</figcaption>
-                </th>
-                <th>
-                    <img id="VariantPawn5Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/black_pawn.png" />
-                    <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn5)</figcaption>
-                </th>
-                <th>
-                    <img id="VariantPawn6Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/black_pawn.png" />
-                    <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn6)</figcaption>
-                </th>
-                <th>
-                    <img id="VariantPawn7Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/black_pawn.png" />
-                    <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn7)</figcaption>
-                </th>
-                <th>
-                    <img id="VariantPawn8Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/black_pawn.png" />
-                    <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn8)</figcaption>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>
-                    <fieldset id="VariantPawn1Change" name="VariantPawn1">
-                        @Html.DropDownList("VariantPawn1")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantPawn2">
-                        @Html.DropDownList("VariantPawn2")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantPawn3">
-                        @Html.DropDownList("VariantPawn3")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantPawn4">
-                        @Html.DropDownList("VariantPawn4")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantPawn5">
-                        @Html.DropDownList("VariantPawn5")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantPawn6">
-                        @Html.DropDownList("VariantPawn6")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantPawn7">
-                        @Html.DropDownList("VariantPawn7")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantPawn8">
-                        @Html.DropDownList("VariantPawn8")
-                    </fieldset>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>
-                    @Html.DisplayNameFor(model => model.VariantRookLeft)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.VariantKnightLeft)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.VariantBishopLeft)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.VariantQueen)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.VariantKing)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.VariantBishopRight)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.VariantKnightRight)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.VariantRookRight)
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>
-                    <fieldset asp-for="VariantRookLeft">
-                        @Html.DropDownList("VariantRookLeft")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantKnightLeft">
-                        @Html.DropDownList("VariantKnightLeft")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantBishopLeft">
-                        @Html.DropDownList("VariantBishopLeft")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantQueen">
-                        @Html.DropDownList("VariantQueen")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantKing">
-                        @Html.DropDownList("VariantKing")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantBishopRight">
-                        @Html.DropDownList("VariantBishopRight")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantKnightRight">
-                        @Html.DropDownList("VariantKnightRight")
-                    </fieldset>
-                </td>
-                <td>
-                    <fieldset asp-for="VariantRookRight">
-                        @Html.DropDownList("VariantRookRight")
-                    </fieldset>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <input type="submit" value="Change board preference" class="btn btn-primary" />
-</form>
+    <form asp-controller="Home" asp-action="EditBoard" method="post" class="w-75 mx-auto">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        <img id="VariantPawn1Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn1)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantPawn2Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn2)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantPawn3Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn3)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantPawn4Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn4)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantPawn5Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn5)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantPawn6Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn6)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantPawn7Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn7)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantPawn8Display" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantPawn8)</figcaption>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantPawn1">
+                            @Html.DropDownList("VariantPawn1")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantPawn2">
+                            @Html.DropDownList("VariantPawn2")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantPawn3">
+                            @Html.DropDownList("VariantPawn3")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantPawn4">
+                            @Html.DropDownList("VariantPawn4")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantPawn5">
+                            @Html.DropDownList("VariantPawn5")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantPawn6">
+                            @Html.DropDownList("VariantPawn6")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantPawn7">
+                            @Html.DropDownList("VariantPawn7")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantPawn8">
+                            @Html.DropDownList("VariantPawn8")
+                        </fieldset>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        <img id="VariantRookLeftDisplay" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantRookLeft)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantKnightLeftDisplay" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantKnightLeft)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantBishopLeftDisplay" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantBishopLeft)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantQueenDisplay" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantQueen)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantKingDisplay" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantKing)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantBishopRightDisplay" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantBishopRight)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantKnightRightDisplay" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantKnightRight)</figcaption>
+                    </th>
+                    <th>
+                        <img id="VariantRookRightDisplay" style="width:50%; display:block; margin-left:auto; margin-right:auto" src="/resources/unknown.png" />
+                        <figcaption style="text-align:center">@Html.DisplayNameFor(model => model.VariantRookRight)</figcaption>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantRookLeft">
+                            @Html.DropDownList("VariantRookLeft")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantKnightLeft">
+                            @Html.DropDownList("VariantKnightLeft")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantBishopLeft">
+                            @Html.DropDownList("VariantBishopLeft")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantQueen">
+                            @Html.DropDownList("VariantQueen")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantKing">
+                            @Html.DropDownList("VariantKing")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantBishopRight">
+                            @Html.DropDownList("VariantBishopRight")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantKnightRight">
+                            @Html.DropDownList("VariantKnightRight")
+                        </fieldset>
+                    </td>
+                    <td>
+                        <fieldset class="d-flex justify-content-center" asp-for="VariantRookRight">
+                            @Html.DropDownList("VariantRookRight")
+                        </fieldset>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="form-group">
+            <label asp-for="Description" class="control-label"></label>
+            <input asp-for="Description" class="form-control" />
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <input type="submit" value="Change board preference" class="btn btn-primary" />
+    </form>
+</div>

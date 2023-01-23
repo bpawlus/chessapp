@@ -15,7 +15,10 @@ namespace ChessWebApp.Core.pieces
         protected bool _moved = false;
         public virtual bool Moved { get => _moved; set => _moved = value; }
 
-        public abstract List<Tuple<int, int, ChessboardScenario>> GetMovesWithScenarios(IFigure[,] board);
+        protected short _figureId;
+        public short FigureId { get => _figureId; set => _figureId = value; }
+
+        public abstract List<Tuple<int, int, ChessBoardScenario>> GetMovesWithScenarios(IFigure[,] board);
 
         public Tuple<int, int> FindMe(IFigure[,] board)
         {
@@ -32,12 +35,12 @@ namespace ChessWebApp.Core.pieces
             return null;
         }
 
-        public virtual List<Tuple<int, int, ChessboardScenario>> GetMovesCheckSave(IFigure[,] board)
+        public virtual List<Tuple<int, int, ChessBoardScenario>> GetMovesCheckSave(IFigure[,] board)
         {
-            return new List<Tuple<int, int, ChessboardScenario>>();
+            return new List<Tuple<int, int, ChessBoardScenario>>();
         }
 
-        public BeatableFigure(ChessPlayer owner)
+        protected BeatableFigure(ChessPlayer owner)
         {
             _owner = owner;
         }

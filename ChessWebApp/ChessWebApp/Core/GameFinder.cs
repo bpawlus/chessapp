@@ -1,6 +1,7 @@
 ﻿using ChessApp.game;
 using ChessWebApp.Models;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 
@@ -12,12 +13,12 @@ namespace ChessWebApp.Core
         private static Dictionary<User, ChessGameController> games = new Dictionary<User, ChessGameController>();
         private static bool hosting = false;
 
-        public static Tuple<ChessGameController, ChessPlayer> findGameOf(User user)
+        public static Tuple<ChessGameController, ChessPlayer> FindGameOf(User user)
         {
-            ChessGameController controller = games[user];
-            if(controller != null)
+            if(games.ContainsKey(user))
             {
-                if(controller.TopPlayer.user == user)
+                var controller = games[user];
+                if (controller.TopPlayer.user == user)
                 {
                     return new Tuple<ChessGameController, ChessPlayer>(controller, controller.TopPlayer);
                 }
@@ -29,6 +30,13 @@ namespace ChessWebApp.Core
             return null;
         }
 
+        public static void ConcludeGame(ChessPlayer u1, ChessPlayer u2)
+        {
+            var gameController = FindGameOf(u1.user);
+            games.Remove(u1.user);
+            games.Remove(u2.user);
+        }
+
         public static void Queue(User user, WebSocket webSocket)
         {
             queuedSockets.Add(user, webSocket);
@@ -36,17 +44,21 @@ namespace ChessWebApp.Core
 
         public static void Unqueue(User user)
         {
-            queuedSockets.Remove(user);
+            if (queuedSockets.ContainsKey(user))
+            {
+                queuedSockets.Remove(user);
+            }
         }
 
         public static async Task HostGameIfPossible()
         {
             while(true)
             {
-                await Task.Delay(5000);
+                await Task.Delay(2000);
 
                 try
                 {
+                    
                     if (queuedSockets.Count >= 2)
                     {
                         GameFinder.hosting = true;
@@ -74,8 +86,8 @@ namespace ChessWebApp.Core
                             Console.WriteLine($"WS Info - {playerSocket2.Key.Name} will be playing with {playerSocket1.Key.Name}");
                         }
 
-                        string messageTo1 = WSMessageHandler.GetGameCustomMessage($"You will be playing vs {playerSocket2.Key.Name}");
-                        string messageTo2 = WSMessageHandler.GetGameCustomMessage($"You will be playing vs {playerSocket1.Key.Name}");
+                        string messageTo1 = WSMessageHandler.GetGameStatusMessage($"You will be playing vs {playerSocket2.Key.Name}", true);
+                        string messageTo2 = WSMessageHandler.GetGameStatusMessage($"You will be playing vs {playerSocket1.Key.Name}", true);
 
                         await WSMessageHandler.SendAsync(playerSocket1.Value, messageTo1);
                         await WSMessageHandler.SendAsync(playerSocket2.Value, messageTo2);

@@ -226,11 +226,6 @@ namespace ChessApp
         private void Logout(object sender, RoutedEventArgs e)
         {
             WSMessageHandler.SendUserLogoutMessage(ws, "Logout");
-
-/*            if (GameController.Player.ReceivedGameUUID != Guid.Empty)
-            {
-                GiveUp(null, null);
-            }*/
         }
 
         private async void FindGame(object sender, RoutedEventArgs e)
@@ -262,53 +257,53 @@ namespace ChessApp
 
         
 
-        private void setOffline()
+        private void SetOffline()
         {
             ws = null;
 
             menuAccountLogin.IsEnabled = true;
             menuAccountLogout.IsEnabled = false;
-            menuGameFind.IsEnabled = false;
 
+            menuGameFind.IsEnabled = false;
             menuGameOpponent.IsEnabled = false;
             menuGameGiveUp.IsEnabled = false;
 
             loginStatus.Text = "Login status: OFFLINE";
         }
 
-        private void setOnline()
+        private void SetOnline()
         {
             menuAccountLogin.IsEnabled = false;
             menuAccountLogout.IsEnabled = true;
-            menuGameFind.IsEnabled = true;
 
-            loginStatus.Text = "Login status: ONLINE";
+            SetOffgame();
         }
 
-        private void setIngame()
+        private void SetIngame()
         {
+            menuGameFind.IsEnabled = false;
             menuGameOpponent.IsEnabled = true;
             menuGameGiveUp.IsEnabled = true;
-            menuGameFind.IsEnabled = false;
 
             loginStatus.Text = "Login status: ONLINE - INGAME";
         }
 
-        private void setOffgame()
+        private void SetOffgame()
         {
+            menuGameFind.IsEnabled = true;
             menuGameOpponent.IsEnabled = false;
             menuGameGiveUp.IsEnabled = false;
-            menuGameFind.IsEnabled = true;
 
             loginStatus.Text = "Login status: ONLINE";
         }
 
-        private async void ApplicationExit(object sender, CancelEventArgs e)
+        private void ApplicationExit(object sender, CancelEventArgs e)
         {
             if (ws != null)
             {
-                WSMessageHandler.SendUserLogoutMessage(ws, "Exit");
-                await Task.Delay(timeout);
+                string header = $"LO:Exit";
+                ws.SendAsync(Encoding.ASCII.GetBytes(header), WebSocketMessageType.Text, true, CancellationToken.None);
+                Thread.Sleep(500);
             }
         }
 
@@ -319,70 +314,107 @@ namespace ChessApp
             var task = ws.ConnectAsync(new Uri($"wss://{CWAHost}/ws"), CancellationToken.None);
             if(await Task.WhenAny(task, Task.Delay(timeout)) == task)
             {
+                WSMessageHandler.SendUserLoginMessage(ws, login, password);
 
+                while (true)
+                {
+                    try
+                    {
+                        var result = await WSMessageHandler.ReceiveAsync(ws);
+
+                        if (result == "")
+                        {
+                            PopMessage("Connection Closed with no reason given.\nProbably closed by remote host.");
+                            SetOffline();
+                            return;
+                        }
+
+                        var exit = WSMessageHandler.HandleExit(result);
+                        if (exit.Item1)
+                        {
+                            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+                            PopMessage("Connection Closed:\n" + exit.Item2);
+                            SetOffline();
+                            return;
+                        }
+
+                        var gameChessboardData = WSMessageHandler.HandleGameChessboardData(result);
+                        if (gameChessboardData.Item1)
+                        {
+                            figures.Clear();
+                            figures = gameChessboardData.Item2;
+                            RefreshBoard();
+                            continue;
+                        }
+
+                        var gameMovesData = WSMessageHandler.HandleGameMovesData(result);
+                        if (gameMovesData.Item1)
+                        {
+                            highlights.Clear();
+                            highlights = gameMovesData.Item2;
+                            RefreshHighlights();
+                            continue;
+                        }
+
+                        var gameCustomMessage = WSMessageHandler.HandleGameCustomMessage(result);
+                        if (gameCustomMessage.Item1)
+                        {
+                            PopMessage(gameCustomMessage.Item2);
+                            continue;
+                        }
+
+                        var gameTurn = WSMessageHandler.HandleGameTurn(result);
+                        if (gameTurn.Item1)
+                        {
+                            if (gameTurn.Item2)
+                            {
+                                turnStatus.Text = "Your turn";
+                            }
+                            else
+                            {
+                                turnStatus.Text = "Not your turn";
+                            }
+                        }
+
+                        var gameStatusMessage = WSMessageHandler.HandleGameStatusMessage(result);
+                        if (gameStatusMessage.Item1)
+                        {
+                            if (gameStatusMessage.Item2)
+                            {
+                                SetIngame();
+                                PopMessage(gameStatusMessage.Item3);
+                            }
+                            else
+                            {
+                                figures.Clear();
+                                RefreshBoard();
+                                SetOffgame();
+                                turnStatus.Text = "";
+                                PopMessage(gameStatusMessage.Item3);
+                            }
+                            continue;
+                        }
+
+                        var serviceLoginOk = WSMessageHandler.HandleServiceLoginOk(result);
+                        if (serviceLoginOk.Item1)
+                        {
+                            PopMessage("Successful Login!");
+                            SetOnline();
+                            continue;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        PopMessage("Connection Closed:\nException:" + e.ToString());
+                        return;
+                    }
+                }
             } 
             else
             {
                 PopMessage("Connection Closed:\nServer not responding");
-                setOffline();
+                SetOffline();
                 return;
-            }
-
-            WSMessageHandler.SendUserLoginMessage(ws, login, password);
-
-            while (true)
-            {
-                try
-                {
-                    var result = await WSMessageHandler.ReceiveAsync(ws);
-
-                    Tuple<bool, string> exit = WSMessageHandler.HandleExit(result);
-                    if (exit.Item1)
-                    {
-                        await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-                        PopMessage("Connection Closed:\n" + exit.Item2);
-                        setOffline();
-                        return;
-                    }
-
-                    Tuple<bool, HashSet<ChessFigure>> gameChessboardData = WSMessageHandler.HandleGameChessboardData(result);
-                    if (gameChessboardData.Item1)
-                    {
-                        figures.Clear();
-                        figures = gameChessboardData.Item2;
-                        RefreshBoard();
-                        continue;
-                    }
-
-                    Tuple<bool, HashSet<Tuple<int, int>>> gameMovesData = WSMessageHandler.HandleGameMovesData(result);
-                    if (gameMovesData.Item1)
-                    {
-                        highlights.Clear();
-                        highlights = gameMovesData.Item2;
-                        RefreshHighlights();
-                        continue;
-                    }
-
-                    Tuple<bool, string> gameCustomMessage = WSMessageHandler.HandleGameCustomMessage(result);
-                    if (gameCustomMessage.Item1)
-                    {
-                        PopMessage(gameCustomMessage.Item2);
-                        continue;
-                    }
-
-                    Tuple<bool> serviceLoginOk = WSMessageHandler.HandleServiceLoginOk(result);
-                    if (serviceLoginOk.Item1)
-                    {
-                        PopMessage("Successful Login!");
-                        setOnline();
-                        continue;
-                    }
-                }
-                catch (Exception e)
-                {
-                    PopMessage("Connection Closed:\nException:" + e.ToString());
-                    return;
-                }
             }
         }
     }

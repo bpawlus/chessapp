@@ -9,6 +9,11 @@ namespace ChessApp.game.pieces
 {
     public interface IFigure
     {
+        public short FigureId
+        {
+            get; set;
+        }
+
         public ChessPlayer Owner
         {
             get;
@@ -20,8 +25,8 @@ namespace ChessApp.game.pieces
             set;
         }
 
-        public List<Tuple<int, int, ChessboardScenario>> GetMovesWithScenarios(IFigure[,] board);
+        public List<Tuple<int, int, ChessBoardScenario>> GetMovesWithScenarios(IFigure[,] board);
         public Tuple<int, int> FindMe(IFigure[,] board);
-        public List<Tuple<int, int, ChessboardScenario>> GetMovesCheckSave(IFigure[,] board);
+        public List<Tuple<int, int, ChessBoardScenario>> GetMovesCheckSave(IFigure[,] board);
     }
 }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,13 +18,13 @@ namespace ChessApp.game
         private readonly char[] boardRowNames = { '1', '2', '3', '4', '5', '6', '7', '8' };
         private readonly char[] boardColNames = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
         public static readonly int chessboardSize = 8;
-        public ChessboardScenario currentScenario;
+        public ChessBoardScenario currentScenario;
         public ChessPlayer TopPlayer { get; }
         public ChessPlayer BottomPlayer { get; }
         public ChessPlayer CurrentPlayer { get; set; }
         public ChessPlayer NotCurrentPlayer { get; set; }
         bool end;
-        private List<Tuple<int, int, ChessboardScenario>> scenarios;
+        private List<Tuple<int, int, ChessBoardScenario>> scenarios;
 
         public ChessGameController(ChessPlayer topPlayer, ChessPlayer bottomPlayer)
         {
@@ -69,40 +70,48 @@ namespace ChessApp.game
             TopPlayer = CurrentPlayer = topPlayer;
             BottomPlayer = NotCurrentPlayer = bottomPlayer;
 
-            currentScenario = new ChessboardScenario(chessboard, null);
+            currentScenario = new ChessBoardScenario(chessboard, null);
             UpdateGameState();
         }
 
-        private void conclude(string info, ChessPlayer winner)
+        private void Conclude(string info, ChessPlayer winner, ChessPlayer loser)
         {
             Console.WriteLine($"WS Game Info - ({TopPlayer.user.Name} vs {BottomPlayer.user.Name}) - {info} - {winner.user.Name} won!");
-            end = true;
+            winner.SendToPlayer(WSMessageHandler.GetGameStatusMessage($"GAME OVER! You won!\nReason: {info}", false));
+            loser.SendToPlayer(WSMessageHandler.GetGameStatusMessage($"GAME OVER! You lost!\nReason: {info}", false));
+            GameFinder.ConcludeGame(winner, loser);
         }
 
         private void UpdateGameState()
         {
-            if (!end)
+            CurrentPlayer = CurrentPlayer == BottomPlayer ? TopPlayer : BottomPlayer;
+            NotCurrentPlayer = NotCurrentPlayer == BottomPlayer ? TopPlayer : BottomPlayer;
+
+            HandleMessageGameBoard(TopPlayer);
+            HandleMessageGameBoard(BottomPlayer);
+
+            scenarios = currentScenario.GetAllTruePlayerMoves(CurrentPlayer);
+
+            if (scenarios.Count() == 0)
             {
-                string board = WSMessageHandler.GetGameChessboardData(currentScenario.chessboardScenario);
-                TopPlayer.SendToPlayer(board);
-                BottomPlayer.SendToPlayer(board);
-
-                CurrentPlayer = CurrentPlayer == BottomPlayer ? TopPlayer : BottomPlayer;
-                NotCurrentPlayer = NotCurrentPlayer == BottomPlayer ? TopPlayer : BottomPlayer;
-                scenarios = currentScenario.GetAllTruePlayerMoves(CurrentPlayer);
-
-                if (scenarios.Count() == 0)
+                if (currentScenario.IsCheckScenario(CurrentPlayer))
                 {
-                    if (currentScenario.IsCheckScenario(CurrentPlayer))
-                    {
-                        conclude("Checkmate", NotCurrentPlayer);
-                    }
-                    else
-                    {
-                        conclude("Stalemate", NotCurrentPlayer);
-                    }
+                    Conclude("Checkmate", NotCurrentPlayer, CurrentPlayer);
+                }
+                else
+                {
+                    Conclude("Stalemate", NotCurrentPlayer, CurrentPlayer);
                 }
             }
+        }
+
+        public void HandleMessageGameBoard(ChessPlayer player)
+        {
+            string board = WSMessageHandler.GetGameChessboardData(currentScenario.chessboardScenario);
+            player.SendToPlayer(board);
+
+            string hismove = WSMessageHandler.GetGameTurn(player == CurrentPlayer);
+            player.SendToPlayer(hismove);
         }
 
         public void HandleMessageGameMove(ChessPlayer player, Tuple<bool, int, int, int, int> gameMoveMessage)
@@ -174,19 +183,19 @@ namespace ChessApp.game
             }
         }
 
-        public void HandleGameGiveUp(ChessPlayer player, Tuple<bool> gameGiveUp)
+        public void HandleGameGiveUp(ChessPlayer player)
         {
             if (player == TopPlayer)
             {
-                conclude($"Surrendered by {TopPlayer.user.Name}", BottomPlayer);
+                Conclude($"Surrendered by {TopPlayer.user.Name}", BottomPlayer, TopPlayer);
             }
             else if (player == BottomPlayer)
             {
-                conclude($"Surrendered by {BottomPlayer.user.Name}", TopPlayer);
+                Conclude($"Surrendered by {BottomPlayer.user.Name}", TopPlayer, BottomPlayer);
             }
         }
 
-        public void HandleGameOppDet(ChessPlayer player, Tuple<bool> gameOpponentDet)
+        public void HandleGameOppDet(ChessPlayer player)
         {
             if (player == TopPlayer)
             {

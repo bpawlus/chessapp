@@ -1,5 +1,6 @@
 ﻿using ChessWebApp.Core;
 using ChessWebApp.Core.pieces;
+using ChessWebApp.Core.piecesFactories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,15 +9,27 @@ using System.Threading.Tasks;
 
 namespace ChessApp.game.pieces
 {
+    public class BishopFactory : FigureFactory
+    {
+        public BishopFactory() : base("Bishop")
+        {
+        }
+
+        protected override IFigure GeneraterRawFigure(ChessPlayer owner)
+        {
+            return new Bishop(owner);
+        }
+    }
+
     public class Bishop : BeatableFigure
     {
         public Bishop(ChessPlayer owner) : base(owner)
         {
         }
 
-        public override List<Tuple<int, int, ChessboardScenario>> GetMovesWithScenarios(IFigure[,] board)
+        public override List<Tuple<int, int, ChessBoardScenario>> GetMovesWithScenarios(IFigure[,] board)
         {
-            List<Tuple<int, int, ChessboardScenario>> toRet = new List<Tuple<int, int, ChessboardScenario>> ();
+            List<Tuple<int, int, ChessBoardScenario>> toRet = new List<Tuple<int, int, ChessBoardScenario>> ();
             Tuple<int, int> ij = FindMe(board);
             
             int ipos = ij.Item1;
@@ -46,9 +59,9 @@ namespace ChessApp.game.pieces
                             } 
                         }
 
-                        ChessboardScenario scenario = new ChessboardScenario(board, this);
+                        ChessBoardScenario scenario = new ChessBoardScenario(board, this);
                         scenario.MoveScenario(ipos, jpos, rows[m], cols[m]);
-                        toRet.Add(new Tuple<int, int, ChessboardScenario>(rows[m], cols[m], scenario));
+                        toRet.Add(new Tuple<int, int, ChessBoardScenario>(rows[m], cols[m], scenario));
                     }
                 }
             }

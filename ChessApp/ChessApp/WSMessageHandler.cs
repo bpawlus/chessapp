@@ -1,4 +1,5 @@
 ﻿using ChessApp.Game;
+using ChessWebApp.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,6 +71,63 @@ namespace ChessApp
             return new Tuple<bool>(correct);
         }
 
+        public static Tuple<bool, bool> HandleGameTurn(string message)
+        {
+            bool correct = false;
+            bool yourturn = false;
+
+            string filter = @"GTRN: (T|F)";
+            Regex rg = new Regex(filter);
+            MatchCollection mc = Regex.Matches(message, filter);
+            if (mc.Count == 1)
+            {
+                foreach (Match match in mc)
+                {
+                    correct = true;
+                    yourturn = match.Groups[1].Value == "T" ? true : false;
+                }
+            }
+            return new Tuple<bool, bool>(correct, yourturn);
+        }
+
+        public static Tuple<bool, bool, string> HandleGameStatusMessage(string message)
+        {
+            bool correct = false;
+            bool start = false;
+            string info = "";
+            HashSet<ChessFigure> figures = new HashSet<ChessFigure>();
+
+            string filter1 = @"GS: ST (.*)";
+            string filter2 = @"GS: GO (.*)";
+            Regex rg = new Regex(filter1);
+            MatchCollection mc = Regex.Matches(message, filter1);
+
+            if (mc.Count == 1)
+            {
+                foreach (Match match in mc)
+                {
+                    correct = true;
+                    start = true;
+                    info = match.Groups[1].Value;
+                }
+            }
+
+            rg = new Regex(filter2);
+            mc = Regex.Matches(message, filter2);
+
+            if (mc.Count == 1)
+            {
+                foreach (Match match in mc)
+                {
+                    correct = true;
+                    start = false;
+                    info = match.Groups[1].Value;
+                }
+            }
+
+            return new Tuple<bool, bool, string>(correct, start, info);
+        }
+
         public static Tuple<bool, HashSet<ChessFigure>> HandleGameChessboardData(string message)
         {
             bool correct = false;
@@ -89,6 +147,7 @@ namespace ChessApp
             filter = @"(-?\d*),(\d*),(\d*) ";
             rg = new Regex(filter);
             mc = Regex.Matches(message, filter);
+            var factoryIds = ChessPiecesFactories.GetFactoryIDs();
 
             if (mc.Count >= 1)
             {
@@ -97,7 +156,15 @@ namespace ChessApp
                     int fig = Int16.Parse(match.Groups[1].Value);
                     int ro = Int16.Parse(match.Groups[2].Value);
                     int co = Int16.Parse(match.Groups[3].Value);
-                    string figname = ChessPiecesEnumTranslator.TrasnslateShortToImage((short)fig);
+                    string figname = "unknown.png";
+                    foreach (var factoryId in factoryIds) {
+                        if(factoryId == Math.Abs((short)fig))
+                        {
+                            var names = ChessPiecesFactories.GetFactoryFigureNames(factoryId);
+                            figname = fig < 0 ? names.Item2 : names.Item3;
+                            break;
+                        }
+                    }
 
                     figures.Add(new ChessFigure(figname, ro, co));
                 }

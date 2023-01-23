@@ -7,14 +7,14 @@ using System.Numerics;
 
 namespace ChessWebApp.Core
 {
-    public class ChessboardScenario
+    public class ChessBoardScenario
     {
         public IFigure[,] chessboardScenario;
         public bool kingBeaten = false;
         public IFigure Issuer { get; }
         public List<IFigure> moved = new List<IFigure>();
 
-        public ChessboardScenario(IFigure[,] baseChessboard, IFigure issuer)
+        public ChessBoardScenario(IFigure[,] baseChessboard, IFigure issuer)
         {
             Issuer = issuer;
             chessboardScenario = new IFigure[ChessGameController.chessboardSize, ChessGameController.chessboardSize];
@@ -42,9 +42,9 @@ namespace ChessWebApp.Core
             chessboardScenario[oldRow, oldCol] = null;
         }
 
-        public List<Tuple<int, int, ChessboardScenario>> GetAllPlayerMoves(bool topPlayer)
+        public List<Tuple<int, int, ChessBoardScenario>> GetAllPlayerMoves(bool topPlayer)
         {
-            List<Tuple<int, int, ChessboardScenario>> allMyMoves = new List<Tuple<int, int, ChessboardScenario>>();
+            List<Tuple<int, int, ChessBoardScenario>> allMyMoves = new List<Tuple<int, int, ChessBoardScenario>>();
 
             for (int i = 0; i < ChessGameController.chessboardSize; i++)
             {
@@ -61,9 +61,9 @@ namespace ChessWebApp.Core
             return allMyMoves;
         }
 
-        public List<Tuple<int, int, ChessboardScenario>> GetAllPlayerCheckSaveMoves(bool topPlayer)
+        public List<Tuple<int, int, ChessBoardScenario>> GetAllPlayerCheckSaveMoves(bool topPlayer)
         {
-            List<Tuple<int, int, ChessboardScenario>> allMyMoves = new List<Tuple<int, int, ChessboardScenario>>();
+            List<Tuple<int, int, ChessBoardScenario>> allMyMoves = new List<Tuple<int, int, ChessBoardScenario>>();
 
             for (int i = 0; i < ChessGameController.chessboardSize; i++)
             {
@@ -80,10 +80,10 @@ namespace ChessWebApp.Core
             return allMyMoves;
         }
 
-        public List<Tuple<int, int, ChessboardScenario>> GetAllTruePlayerMoves(ChessPlayer player)
+        public List<Tuple<int, int, ChessBoardScenario>> GetAllTruePlayerMoves(ChessPlayer player)
         {
-            List<Tuple<int, int, ChessboardScenario>> allMyMoves = GetAllPlayerMoves(player.isTop);
-            List<Tuple<int, int, ChessboardScenario>> trueMyMoves = new List<Tuple<int, int, ChessboardScenario>>();
+            List<Tuple<int, int, ChessBoardScenario>> allMyMoves = GetAllPlayerMoves(player.isTop);
+            List<Tuple<int, int, ChessBoardScenario>> trueMyMoves = new List<Tuple<int, int, ChessBoardScenario>>();
 
             if (!IsCheckScenario(player))
             {
@@ -103,7 +103,7 @@ namespace ChessWebApp.Core
 
         public bool IsCheckScenario(ChessPlayer player)
         {
-            List<Tuple<int, int, ChessboardScenario>> allEnemyMoves = GetAllPlayerMoves(!player.isTop);
+            List<Tuple<int, int, ChessBoardScenario>> allEnemyMoves = GetAllPlayerMoves(!player.isTop);
                 
             foreach (var moveWithScenario in allEnemyMoves)
             {

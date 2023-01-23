@@ -64,7 +64,11 @@
 
         <StatusBar Grid.Row="4" Grid.ColumnSpan="3">
             <StatusBarItem Padding="10,0,10,0" >
-                <TextBlock x:Name="loginStatus" Text="Login status"  HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <TextBlock x:Name="loginStatus" Text=""  HorizontalAlignment="Left" VerticalAlignment="Center" />
+            </StatusBarItem>
+            
+            <StatusBarItem Padding="10,0,10,0" >
+                <TextBlock x:Name="turnStatus" Text=""  HorizontalAlignment="Left" VerticalAlignment="Center" />
             </StatusBarItem>
         </StatusBar>
     </Grid>

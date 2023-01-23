@@ -14,6 +14,7 @@ using ChessWebApp.Core;
 using ChessApp.game;
 using System.Numerics;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using static Azure.Core.HttpHeader;
 
 namespace ChessWebApp.Controllers
 {
@@ -24,27 +25,7 @@ namespace ChessWebApp.Controllers
         public const string SessionUserId = "_UserId";
         public const string SessionUserName = "_UserName";
 
-        public HomeController(MvcGameContext context, ILogger<HomeController> logger)
-        {
-            _logger = logger;
-            _context = context;
-        }
-
-        private Dictionary<string, List<SelectListItem>> GetSelectListItems(User user)
-        {
-            var toRet = new Dictionary<string, List<SelectListItem>>();
-
-            short[] selected = new short[]{
-                        user.VariantKing, user.VariantQueen,
-                        user.VariantBishopLeft, user.VariantBishopRight,
-                        user.VariantKnightLeft, user.VariantKnightRight,
-                        user.VariantRookLeft, user.VariantRookRight,
-                        user.VariantPawn1, user.VariantPawn2, user.VariantPawn3, user.VariantPawn4,
-                        user.VariantPawn5, user.VariantPawn6, user.VariantPawn7, user.VariantPawn8 
-            };
-          
-
-            string[] keys = new string[]{
+        private string[] keys = new string[]{
                         "VariantKing", "VariantQueen",
                         "VariantBishopLeft", "VariantBishopRight",
                         "VariantKnightLeft", "VariantKnightRight",
@@ -53,28 +34,69 @@ namespace ChessWebApp.Controllers
                         "VariantPawn5", "VariantPawn6", "VariantPawn7", "VariantPawn8"
             };
 
-            for (int i = 0; i < keys.Length; i++)
+        public HomeController(MvcGameContext context, ILogger<HomeController> logger)
+        {
+            _logger = logger;
+            _context = context;
+        }
+
+
+        private void SetSelectListItems(User user)
+        {
+            short[] selected = new short[]{
+                        user.VariantKing, user.VariantQueen,
+                        user.VariantBishopLeft, user.VariantBishopRight,
+                        user.VariantKnightLeft, user.VariantKnightRight,
+                        user.VariantRookLeft, user.VariantRookRight,
+                        user.VariantPawn1, user.VariantPawn2, user.VariantPawn3, user.VariantPawn4,
+                        user.VariantPawn5, user.VariantPawn6, user.VariantPawn7, user.VariantPawn8 
+            };
+
+            var factoryIds = ChessPiecesFactories.GetFactoryIDs();
+            var pictures = new Dictionary<short, string>();
+
+            foreach (short id in factoryIds)
             {
-                List<SelectListItem> items = new List<SelectListItem>();
-                foreach (ChessPiecesEnum cp in (ChessPiecesEnum[])Enum.GetValues(typeof(ChessPiecesEnum)))
-                {
-                    if (cp != ChessPiecesEnum.Null)
-                    {
-                        short val = (short)cp;
-                        if (val != selected[i])
-                        {
-                            items.Add(new SelectListItem { Text = cp.ToString(), Value = val.ToString() });
-                        }
-                        else
-                        {
-                            items.Add(new SelectListItem { Text = cp.ToString(), Value = val.ToString(), Selected = true });
-                        }
-                    }
-                }
-                toRet.Add(keys[i], items);
+                pictures.Add(id, ChessPiecesFactories.GetFactoryFigureNames(id).Item2);
             }
 
-            return toRet;
+            short kingFactory = 6;
+            
+            factoryIds.Remove(kingFactory);
+
+            List<SelectListItem> kingItems = new List<SelectListItem>();
+            var kingNames = ChessPiecesFactories.GetFactoryFigureNames(kingFactory);
+            if (kingFactory != selected[0])
+            {
+                kingItems.Add(new SelectListItem { Text = kingNames.Item1, Value = kingFactory.ToString() });
+            }
+            else
+            {
+                kingItems.Add(new SelectListItem { Text = kingNames.Item1, Value = kingFactory.ToString(), Selected = true });
+            }
+            ViewData[keys[0]] = kingItems;
+
+            for (int i = 1; i < selected.Length; i++)
+            {
+                List<SelectListItem> items = new List<SelectListItem>();
+
+                foreach (short id in factoryIds)
+                {
+                    var names = ChessPiecesFactories.GetFactoryFigureNames(id);
+                    if (id != selected[i])
+                    {
+                        items.Add(new SelectListItem { Text = names.Item1, Value = id.ToString() });
+                    }
+                    else
+                    {
+                        items.Add(new SelectListItem { Text = names.Item1, Value = id.ToString(), Selected = true });
+                    }
+                }
+                ViewData[keys[i]] = items;
+            }
+
+            ViewData["keys"] = keys;
+            ViewData["pictures"] = pictures;
         }
         public IActionResult Index()
         {
@@ -85,24 +107,7 @@ namespace ChessWebApp.Controllers
                 var ans = _context.User.Where(dbuser => dbuser.Id == id);
                 var ele = ans.ToArray().ElementAt(0);
 
-                var elements = GetSelectListItems(ele);
-                ViewBag.VariantPawn1 = elements["VariantPawn1"];
-                ViewBag.VariantPawn2 = elements["VariantPawn2"];
-                ViewBag.VariantPawn3 = elements["VariantPawn3"];
-                ViewBag.VariantPawn4 = elements["VariantPawn4"];
-                ViewBag.VariantPawn5 = elements["VariantPawn5"];
-                ViewBag.VariantPawn6 = elements["VariantPawn6"];
-                ViewBag.VariantPawn7 = elements["VariantPawn7"];
-                ViewBag.VariantPawn8 = elements["VariantPawn8"];
-
-                ViewBag.VariantKing = elements["VariantKing"];
-                ViewBag.VariantQueen = elements["VariantQueen"];
-                ViewBag.VariantBishopLeft = elements["VariantBishopLeft"];
-                ViewBag.VariantBishopRight = elements["VariantBishopRight"];
-                ViewBag.VariantKnightLeft = elements["VariantKnightLeft"];
-                ViewBag.VariantKnightRight = elements["VariantKnightRight"];
-                ViewBag.VariantRookLeft = elements["VariantRookLeft"];
-                ViewBag.VariantRookRight = elements["VariantRookRight"];
+                SetSelectListItems(ele);
 
                 return View(ele);
             }
@@ -118,7 +123,8 @@ namespace ChessWebApp.Controllers
                         "VariantKnightLeft", "VariantKnightRight",
                         "VariantRookLeft", "VariantRookRight",
                         "VariantPawn1", "VariantPawn2", "VariantPawn3", "VariantPawn4",
-                        "VariantPawn5", "VariantPawn6", "VariantPawn7", "VariantPawn8"
+                        "VariantPawn5", "VariantPawn6", "VariantPawn7", "VariantPawn8",
+                        "Description"
             )] User user)
         {
             int id = (int)HttpContext.Session.GetInt32(SessionUserId);
@@ -148,6 +154,7 @@ namespace ChessWebApp.Controllers
                         db.Entry(user).Property(x => x.VariantRookRight).IsModified = true;
                         db.Entry(user).Property(x => x.VariantKnightLeft).IsModified = true;
                         db.Entry(user).Property(x => x.VariantKnightRight).IsModified = true;
+                        db.Entry(user).Property(x => x.Description).IsModified = true;
                         db.SaveChanges();
                     }
                 }
@@ -297,31 +304,49 @@ namespace ChessWebApp.Controllers
                 {
                     var receiveResult = await WSMessageHandler.ReceiveAsync(webSocket);
 
-                    Tuple<bool> receivedMessage = WSMessageHandler.HandleUserFindGameMessage(receiveResult);
+                    var receivedMessage = WSMessageHandler.HandleUserFindGameMessage(receiveResult);
                     if (receivedMessage.Item1)
                     {
-                        Console.WriteLine($"WS Info - User {user.Name} wants to find a game!");
-                        GameFinder.Queue(user, webSocket);
+                        var game = GameFinder.FindGameOf(user);
+                        if (game != null)
+                        {
+                            Console.WriteLine($"WS Info - User {user.Name} somehow reconnected?");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"WS Info - User {user.Name} wants to find a game!");
+                            GameFinder.Queue(user, webSocket);
+                        }
                         continue;
                     }
 
-                    Tuple<bool, string> receivedMessage2 = WSMessageHandler.HandleUserLogoutMessage(receiveResult);
+                    var receivedMessage2 = WSMessageHandler.HandleUserLogoutMessage(receiveResult);
                     if (receivedMessage2.Item1)
                     {
-                        GameFinder.Unqueue(user);
+                        
+                        var game = GameFinder.FindGameOf(user);
+                        if (game != null)
+                        {
+                            game.Item1.HandleGameGiveUp(game.Item2);
+                        }
+                        else
+                        {
+                            GameFinder.Unqueue(user);
+                        }
+
                         await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, $"Logged out! - Reason {receivedMessage2.Item2}", CancellationToken.None);
                         Console.WriteLine($"WS Info - User {user.Name} logged out! ({receivedMessage2.Item2})");
                         return;
                     }
 
-                    Tuple<bool, int, int, int, int> gameMoveMessage = WSMessageHandler.HandleGameMoveMessage(receiveResult);
-                    Tuple<bool, int, int> gameGetMoveMessage = WSMessageHandler.HandleGameGetMoveMessage(receiveResult);
-                    Tuple<bool> gameGiveUp = WSMessageHandler.HandleGameGiveUpMessage(receiveResult);
-                    Tuple<bool> gameOpponentDet = WSMessageHandler.HandleGameOppDetMessage(receiveResult);
+                    var gameMoveMessage = WSMessageHandler.HandleGameMoveMessage(receiveResult);
+                    var gameGetMoveMessage = WSMessageHandler.HandleGameGetMoveMessage(receiveResult);
+                    var gameGiveUp = WSMessageHandler.HandleGameGiveUpMessage(receiveResult);
+                    var gameOpponentDet = WSMessageHandler.HandleGameOppDetMessage(receiveResult);
 
                     if (gameMoveMessage.Item1 || gameGetMoveMessage.Item1 || gameGiveUp.Item1 || gameOpponentDet.Item1)
                     {
-                        Tuple<ChessGameController, ChessPlayer> game = GameFinder.findGameOf(user);
+                        var game = GameFinder.FindGameOf(user);
                         if (game != null)
                         {
                             Console.WriteLine($"WS Game Info - Handling {receiveResult} from {user.Name}");
@@ -337,18 +362,18 @@ namespace ChessWebApp.Controllers
                             }
                             else if (gameGiveUp.Item1)
                             {
-                                game.Item1.HandleGameGiveUp(game.Item2, gameGiveUp);
+                                game.Item1.HandleGameGiveUp(game.Item2);
                                 continue;
                             }
                             else if (gameOpponentDet.Item1)
                             {
-                                game.Item1.HandleGameOppDet(game.Item2, gameOpponentDet);
+                                game.Item1.HandleGameOppDet(game.Item2);
                                 continue;
                             }
                         }
                         else
                         {
-                            Console.WriteLine($"WS Info - User {user.Id} logged out!");
+                            Console.WriteLine($"WS Info - User {user.Id} sent game move while not in game!");
                             continue;
                         }
                     }

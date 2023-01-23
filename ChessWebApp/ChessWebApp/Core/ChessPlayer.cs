@@ -24,29 +24,29 @@ namespace ChessWebApp.Core
         public ChessPlayer(User u, WebSocket ws, bool top)
         {
             user = u;
-            ChessPiecesEnum[] enumIds = ChessPiecesEnumTranslator.Translate(new short[]{
+            short[] ids = new short[]{
                         u.VariantKing, u.VariantQueen,
                         u.VariantBishopLeft, u.VariantBishopRight,
                         u.VariantKnightLeft, u.VariantKnightRight,
                         u.VariantRookLeft, u.VariantRookRight,
                         u.VariantPawn1, u.VariantPawn2, u.VariantPawn3, u.VariantPawn4,
                         u.VariantPawn5, u.VariantPawn6, u.VariantPawn7, u.VariantPawn8
-                    });
+                    };
 
             _ws = ws;
             isTop = top;
-            kingFigure = ChessPiecesEnumTranslator.CreateFigure(this, enumIds[0]);
-            queenFigure = ChessPiecesEnumTranslator.CreateFigure(this, enumIds[1]);
-            bishopFigures[0] = ChessPiecesEnumTranslator.CreateFigure(this, enumIds[2]);
-            bishopFigures[1] = ChessPiecesEnumTranslator.CreateFigure(this, enumIds[3]);
-            knightFigures[0] = ChessPiecesEnumTranslator.CreateFigure(this, enumIds[4]);
-            knightFigures[1] = ChessPiecesEnumTranslator.CreateFigure(this, enumIds[5]);
-            rookFigures[0] = ChessPiecesEnumTranslator.CreateFigure(this, enumIds[6]);
-            rookFigures[1] = ChessPiecesEnumTranslator.CreateFigure(this, enumIds[7]);
+            kingFigure = ChessPiecesFactories.CreateFigure(this, ids[0]);
+            queenFigure = ChessPiecesFactories.CreateFigure(this, ids[1]);
+            bishopFigures[0] = ChessPiecesFactories.CreateFigure(this, ids[2]);
+            bishopFigures[1] = ChessPiecesFactories.CreateFigure(this, ids[3]);
+            knightFigures[0] = ChessPiecesFactories.CreateFigure(this, ids[4]);
+            knightFigures[1] = ChessPiecesFactories.CreateFigure(this, ids[5]);
+            rookFigures[0] = ChessPiecesFactories.CreateFigure(this, ids[6]);
+            rookFigures[1] = ChessPiecesFactories.CreateFigure(this, ids[7]);
 
             for(int i = 0; i < 8; i++)
             {
-                pawnFigures[i] = ChessPiecesEnumTranslator.CreateFigure(this, enumIds[i + 8]);
+                pawnFigures[i] = ChessPiecesFactories.CreateFigure(this, ids[i + 8]);
             }
         }
 

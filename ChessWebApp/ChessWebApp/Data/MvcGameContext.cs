@@ -34,23 +34,23 @@ namespace ChessWebApp.Data
 
                 user.Property(p => p.Description).HasDefaultValue("Player").IsRequired(false);
 
-                user.Property(p => p.VariantPawn1).HasDefaultValue((short)ChessPiecesEnum.ClassicPawn);
-                user.Property(p => p.VariantPawn2).HasDefaultValue((short)ChessPiecesEnum.ClassicPawn);
-                user.Property(p => p.VariantPawn3).HasDefaultValue((short)ChessPiecesEnum.ClassicPawn);
-                user.Property(p => p.VariantPawn4).HasDefaultValue((short)ChessPiecesEnum.ClassicPawn);
-                user.Property(p => p.VariantPawn5).HasDefaultValue((short)ChessPiecesEnum.ClassicPawn);
-                user.Property(p => p.VariantPawn6).HasDefaultValue((short)ChessPiecesEnum.ClassicPawn);
-                user.Property(p => p.VariantPawn7).HasDefaultValue((short)ChessPiecesEnum.ClassicPawn);
-                user.Property(p => p.VariantPawn8).HasDefaultValue((short)ChessPiecesEnum.ClassicPawn);
+                user.Property(p => p.VariantPawn1).HasDefaultValue(1);
+                user.Property(p => p.VariantPawn2).HasDefaultValue(1);
+                user.Property(p => p.VariantPawn3).HasDefaultValue(1);
+                user.Property(p => p.VariantPawn4).HasDefaultValue(1);
+                user.Property(p => p.VariantPawn5).HasDefaultValue(1);
+                user.Property(p => p.VariantPawn6).HasDefaultValue(1);
+                user.Property(p => p.VariantPawn7).HasDefaultValue(1);
+                user.Property(p => p.VariantPawn8).HasDefaultValue(1);
 
-                user.Property(p => p.VariantRookLeft).HasDefaultValue((short)ChessPiecesEnum.ClassicRook);
-                user.Property(p => p.VariantRookRight).HasDefaultValue((short)ChessPiecesEnum.ClassicRook);
-                user.Property(p => p.VariantKnightLeft).HasDefaultValue((short)ChessPiecesEnum.ClassicKnight);
-                user.Property(p => p.VariantKnightRight).HasDefaultValue((short)ChessPiecesEnum.ClassicKnight);
-                user.Property(p => p.VariantBishopLeft).HasDefaultValue((short)ChessPiecesEnum.ClassicBishop);
-                user.Property(p => p.VariantBishopRight).HasDefaultValue((short)ChessPiecesEnum.ClassicBishop);
-                user.Property(p => p.VariantQueen).HasDefaultValue((short)ChessPiecesEnum.ClassicQueen);
-                user.Property(p => p.VariantKing).HasDefaultValue((short)ChessPiecesEnum.ClassicKing);
+                user.Property(p => p.VariantRookLeft).HasDefaultValue(2);
+                user.Property(p => p.VariantRookRight).HasDefaultValue(2);
+                user.Property(p => p.VariantKnightLeft).HasDefaultValue(3);
+                user.Property(p => p.VariantKnightRight).HasDefaultValue(3);
+                user.Property(p => p.VariantBishopLeft).HasDefaultValue(4);
+                user.Property(p => p.VariantBishopRight).HasDefaultValue(4);
+                user.Property(p => p.VariantQueen).HasDefaultValue(5);
+                user.Property(p => p.VariantKing).HasDefaultValue(6);
             });
 
             modelBuilder.Entity<Game>(game => {

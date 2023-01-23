@@ -171,13 +171,21 @@ namespace ChessWebApp
             {
                 for (int j = 0; j < figures.GetLength(1); j++)
                 {
-                    short number = ChessPiecesEnumTranslator.TrasnslateFigureToShort(figures[i, j]);
-                    if (number != 0) 
+                    if (figures[i,j] != null)
                     {
+                        short number = figures[i, j].FigureId;
                         header += $"{number},{i},{j} ";
                     }
                 }
             }
+
+            return header;
+        }
+
+        public static string GetGameTurn(bool yourmove)
+        {
+            string movelabel = yourmove ? "T" : "F";
+            string header = "GTRN: " + movelabel;
 
             return header;
         }
@@ -196,6 +204,12 @@ namespace ChessWebApp
         public static string GetGameCustomMessage(string message)
         {
             return "GMES:" + message;
+        }
+
+        public static string GetGameStatusMessage(string message, bool start)
+        {
+            string startorend = start ? "ST" : "GO";
+            return "GS: " + startorend + " " + message;
         }
 
         public static void SendServiceLoginOk(WebSocket ws)
