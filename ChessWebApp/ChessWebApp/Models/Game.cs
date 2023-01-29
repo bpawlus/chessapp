@@ -10,6 +10,10 @@ namespace ChessWebApp.Models
         public User? PlayerBottom { get; set; }
         [ForeignKey("PlayerTopId")]
         public User? PlayerTop { get; set; }
+        [ForeignKey("PlayerWinnerId")]
+        public User? PlayerWinner { get; set; }
+        [ForeignKey("PlayerLoserId")]
+        public User? PlayerLoser { get; set; }
         public ICollection<GameEvent>? GameEvents { get; set; }
     }
 }

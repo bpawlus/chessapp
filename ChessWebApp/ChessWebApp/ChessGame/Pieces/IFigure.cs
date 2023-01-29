@@ -1,11 +1,11 @@
-﻿using ChessWebApp.Core;
+﻿using ChessWebApp.ChessGame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChessApp.game.pieces
+namespace ChessWebApp.ChessGame.Pieces
 {
     public interface IFigure
     {

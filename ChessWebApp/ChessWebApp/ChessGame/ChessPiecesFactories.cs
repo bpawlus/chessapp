@@ -1,10 +1,10 @@
-﻿using ChessApp.game;
-using ChessApp.game.pieces;
-using ChessWebApp.Core.piecesFactories;
+﻿using ChessWebApp.ChessGame;
+using ChessWebApp.ChessGame.Pieces;
+using ChessWebApp.ChessGame.Pieces;
 using System;
 using System.Linq;
 
-namespace ChessWebApp.Core
+namespace ChessWebApp.ChessGame
 {
     public static class ChessPiecesFactories
     {

@@ -4,6 +4,7 @@ using ChessWebApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChessWebApp.Migrations
 {
     [DbContext(typeof(MvcGameContext))]
-    partial class MvcUserContextModelSnapshot : ModelSnapshot
+    [Migration("20230128215559_7-GameEventRestore")]
+    partial class _7GameEventRestore
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,24 +36,14 @@ namespace ChessWebApp.Migrations
                     b.Property<int?>("PlayerBottomId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PlayerLoserId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("PlayerTopId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PlayerWinnerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PlayerBottomId");
 
-                    b.HasIndex("PlayerLoserId");
-
                     b.HasIndex("PlayerTopId");
-
-                    b.HasIndex("PlayerWinnerId");
 
                     b.ToTable("Game");
                 });
@@ -63,7 +56,10 @@ namespace ChessWebApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ActionDescription")
+                    b.Property<short>("ActionId")
+                        .HasColumnType("smallint");
+
+                    b.Property<string>("ActionValue")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -80,7 +76,7 @@ namespace ChessWebApp.Migrations
 
                     b.HasIndex("GameId");
 
-                    b.ToTable("GameEvent");
+                    b.ToTable("GameEvents");
                 });
 
             modelBuilder.Entity("ChessWebApp.Models.User", b =>
@@ -207,28 +203,14 @@ namespace ChessWebApp.Migrations
                         .HasForeignKey("PlayerBottomId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("ChessWebApp.Models.User", "PlayerLoser")
-                        .WithMany("GamesLost")
-                        .HasForeignKey("PlayerLoserId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("ChessWebApp.Models.User", "PlayerTop")
                         .WithMany("GamesTop")
                         .HasForeignKey("PlayerTopId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("ChessWebApp.Models.User", "PlayerWinner")
-                        .WithMany("GamesWon")
-                        .HasForeignKey("PlayerWinnerId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.Navigation("PlayerBottom");
 
-                    b.Navigation("PlayerLoser");
-
                     b.Navigation("PlayerTop");
-
-                    b.Navigation("PlayerWinner");
                 });
 
             modelBuilder.Entity("ChessWebApp.Models.GameEvent", b =>
@@ -250,11 +232,7 @@ namespace ChessWebApp.Migrations
                 {
                     b.Navigation("GamesBottom");
 
-                    b.Navigation("GamesLost");
-
                     b.Navigation("GamesTop");
-
-                    b.Navigation("GamesWon");
                 });
 #pragma warning restore 612, 618
         }

@@ -4,7 +4,7 @@ using System.Configuration;
 using System.Net.WebSockets;
 using System.Net;
 using System.Text;
-using ChessWebApp.Core;
+using ChessWebApp.ChessGame;
 using System.Numerics;
 
 
@@ -26,12 +26,11 @@ builder.Services.AddSession(options =>
 
 
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
+var scope = app.Services.CreateScope();
+var services = scope.ServiceProvider;
 
-    Seed.Initialize(services);
-}
+Seed.Initialize(services);
+GameFinder.InitializeContext(services);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

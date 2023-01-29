@@ -1,29 +1,29 @@
-﻿using ChessWebApp.Core;
-using ChessWebApp.Core.pieces;
-using ChessWebApp.Core.piecesFactories;
+﻿using ChessWebApp.ChessGame;
+using ChessWebApp.ChessGame.Pieces;
+using ChessWebApp.ChessGame.Pieces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChessApp.game.pieces
+namespace ChessWebApp.ChessGame.Pieces
 {
-    public class BishopFactory : FigureFactory
+    public class RookFactory : FigureFactory
     {
-        public BishopFactory() : base("Bishop")
+        public RookFactory() : base("Rook")
         {
         }
 
         protected override IFigure GeneraterRawFigure(ChessPlayer owner)
         {
-            return new Bishop(owner);
+            return new Rook(owner);
         }
     }
 
-    public class Bishop : BeatableFigure
+    public class Rook : BeatableFigure
     {
-        public Bishop(ChessPlayer owner) : base(owner)
+        public Rook(ChessPlayer owner) : base(owner)
         {
         }
 
@@ -31,24 +31,24 @@ namespace ChessApp.game.pieces
         {
             List<Tuple<int, int, ChessBoardScenario>> toRet = new List<Tuple<int, int, ChessBoardScenario>> ();
             Tuple<int, int> ij = FindMe(board);
-            
+
             int ipos = ij.Item1;
             int jpos = ij.Item2;
 
             bool[] hadBeateable = new bool[4] { false, false, false, false };
-            for (int n = 1; n < ChessGameController.chessboardSize; n++)
+            for (int n = 1; n < ChessGameController.ChessboardSize; n++)
             {
-                int[] rows = new int[4] { ipos + n, ipos + n, ipos - n, ipos - n };
-                int[] cols = new int[4] { jpos + n, jpos - n, jpos + n, jpos - n };
-                for (int m = 0; m < rows.Length; m++)
+                int[] rows = new int[4] { ipos + n, ipos - n, ipos, ipos };
+                int[] cols = new int[4] { jpos, jpos, jpos + n, jpos - n };
+                for (int m = 0; m < 4; m++)
                 {
                     if (
                         !hadBeateable[m] &&
-                        rows[m] >= 0 && rows[m] < ChessGameController.chessboardSize &&
-                        cols[m] >= 0 && cols[m] < ChessGameController.chessboardSize
+                        rows[m] >= 0 && rows[m] < ChessGameController.ChessboardSize &&
+                        cols[m] >= 0 && cols[m] < ChessGameController.ChessboardSize
                     )
                     {
-                        if (board[rows[m],cols[m]] != null)
+                        if (board[rows[m], cols[m]] != null)
                         {
                             IFigure unknownFigure = board[rows[m], cols[m]];
                             hadBeateable[m] = true;
@@ -56,7 +56,7 @@ namespace ChessApp.game.pieces
                             if (unknownFigure.Owner == Owner)
                             {
                                 continue;
-                            } 
+                            }
                         }
 
                         ChessBoardScenario scenario = new ChessBoardScenario(board, this);

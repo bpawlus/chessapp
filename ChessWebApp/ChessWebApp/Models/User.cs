@@ -55,5 +55,7 @@ namespace ChessWebApp.Models
 
         public ICollection<Game>? GamesTop { get; set; }
         public ICollection<Game>? GamesBottom { get; set; }
+        public ICollection<Game>? GamesWon { get; set; }
+        public ICollection<Game>? GamesLost { get; set; }
     }
 }

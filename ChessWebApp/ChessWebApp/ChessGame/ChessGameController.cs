@@ -1,7 +1,9 @@
-﻿using ChessApp.game.pieces;
+﻿using ChessWebApp.ChessGame.Pieces;
 using ChessWebApp;
-using ChessWebApp.Core;
+using ChessWebApp.ChessGame;
+using ChessWebApp.Data;
 using ChessWebApp.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -10,28 +12,32 @@ using System.Net.WebSockets;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using System.Reflection;
 
-namespace ChessApp.game
+namespace ChessWebApp.ChessGame
 {
     public class ChessGameController
     {
-        private readonly char[] boardRowNames = { '1', '2', '3', '4', '5', '6', '7', '8' };
-        private readonly char[] boardColNames = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
-        public static readonly int chessboardSize = 8;
-        public ChessBoardScenario currentScenario;
+        private readonly char[] _boardRowNames = { '1', '2', '3', '4', '5', '6', '7', '8' };
+        private readonly char[] _boardColNames = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
+        public static readonly int ChessboardSize = 8;
+        public ChessBoardScenario CurrentScenario;
         public ChessPlayer TopPlayer { get; }
         public ChessPlayer BottomPlayer { get; }
         public ChessPlayer CurrentPlayer { get; set; }
         public ChessPlayer NotCurrentPlayer { get; set; }
-        bool end;
-        private List<Tuple<int, int, ChessBoardScenario>> scenarios;
+        private List<Tuple<int, int, ChessBoardScenario>> _scenarios;
+        public Game Game;
 
         public ChessGameController(ChessPlayer topPlayer, ChessPlayer bottomPlayer)
         {
-            IFigure[,] chessboard = new IFigure[chessboardSize, chessboardSize];
-            for (int i = 0; i < chessboardSize; i++)
+            Game = GameFinder.AddGame(topPlayer, bottomPlayer);
+
+            IFigure[,] chessboard = new IFigure[ChessboardSize, ChessboardSize];
+            for (int i = 0; i < ChessboardSize; i++)
             {
-                for (int j = 0; j < chessboardSize; j++)
+                for (int j = 0; j < ChessboardSize; j++)
                 {
                     chessboard[i, j] = null;
                 }
@@ -39,47 +45,47 @@ namespace ChessApp.game
 
             for (int i = 0; i < 8; i++)
             {
-                chessboard[1, i] = topPlayer.pawnFigures[i];
-                chessboard[6, i] = bottomPlayer.pawnFigures[i];
+                chessboard[1, i] = topPlayer.PawnFigures[i];
+                chessboard[6, i] = bottomPlayer.PawnFigures[i];
             }
 
-            chessboard[0, 0] = topPlayer.rookFigures[0];
-            chessboard[7, 0] = bottomPlayer.rookFigures[0];
+            chessboard[0, 0] = topPlayer.RookFigures[0];
+            chessboard[7, 0] = bottomPlayer.RookFigures[0];
 
-            chessboard[0, 7] = topPlayer.rookFigures[1];
-            chessboard[7, 7] = bottomPlayer.rookFigures[1];
+            chessboard[0, 7] = topPlayer.RookFigures[1];
+            chessboard[7, 7] = bottomPlayer.RookFigures[1];
 
-            chessboard[0, 1] = topPlayer.knightFigures[0];
-            chessboard[7, 1] = bottomPlayer.knightFigures[0];
+            chessboard[0, 1] = topPlayer.KnightFigures[0];
+            chessboard[7, 1] = bottomPlayer.KnightFigures[0];
 
-            chessboard[0, 6] = topPlayer.knightFigures[1];
-            chessboard[7, 6] = bottomPlayer.knightFigures[1];
+            chessboard[0, 6] = topPlayer.KnightFigures[1];
+            chessboard[7, 6] = bottomPlayer.KnightFigures[1];
 
-            chessboard[0, 2] = topPlayer.bishopFigures[0];
-            chessboard[7, 2] = bottomPlayer.bishopFigures[0];
+            chessboard[0, 2] = topPlayer.BishopFigures[0];
+            chessboard[7, 2] = bottomPlayer.BishopFigures[0];
 
-            chessboard[0, 5] = topPlayer.bishopFigures[1];
-            chessboard[7, 5] = bottomPlayer.bishopFigures[1];
+            chessboard[0, 5] = topPlayer.BishopFigures[1];
+            chessboard[7, 5] = bottomPlayer.BishopFigures[1];
 
-            chessboard[0, 3] = topPlayer.queenFigure;
-            chessboard[7, 3] = bottomPlayer.queenFigure;
+            chessboard[0, 3] = topPlayer.QueenFigure;
+            chessboard[7, 3] = bottomPlayer.QueenFigure;
 
-            chessboard[0, 4] = topPlayer.kingFigure;
-            chessboard[7, 4] = bottomPlayer.kingFigure;
+            chessboard[0, 4] = topPlayer.KingFigure;
+            chessboard[7, 4] = bottomPlayer.KingFigure;
 
             TopPlayer = CurrentPlayer = topPlayer;
             BottomPlayer = NotCurrentPlayer = bottomPlayer;
 
-            currentScenario = new ChessBoardScenario(chessboard, null);
+            CurrentScenario = new ChessBoardScenario(chessboard, null);
             UpdateGameState();
         }
 
         private void Conclude(string info, ChessPlayer winner, ChessPlayer loser)
         {
-            Console.WriteLine($"WS Game Info - ({TopPlayer.user.Name} vs {BottomPlayer.user.Name}) - {info} - {winner.user.Name} won!");
+            Console.WriteLine($"WS Game Info - ({TopPlayer.User.Name} vs {BottomPlayer.User.Name}) - {info} - {winner.User.Name} won!");
             winner.SendToPlayer(WSMessageHandler.GetGameStatusMessage($"GAME OVER! You won!\nReason: {info}", false));
             loser.SendToPlayer(WSMessageHandler.GetGameStatusMessage($"GAME OVER! You lost!\nReason: {info}", false));
-            GameFinder.ConcludeGame(winner, loser);
+            GameFinder.ConcludeGame(this, winner, loser);
         }
 
         private void UpdateGameState()
@@ -87,14 +93,16 @@ namespace ChessApp.game
             CurrentPlayer = CurrentPlayer == BottomPlayer ? TopPlayer : BottomPlayer;
             NotCurrentPlayer = NotCurrentPlayer == BottomPlayer ? TopPlayer : BottomPlayer;
 
-            HandleMessageGameBoard(TopPlayer);
-            HandleMessageGameBoard(BottomPlayer);
+            var data = WSMessageHandler.GetGameChessboardData(CurrentScenario.ChessboardScenario);
+            HandleMessageGameBoard(TopPlayer, data);
+            HandleMessageGameBoard(BottomPlayer, data);
+            GameFinder.AddBoardStatus(Game, NotCurrentPlayer.User.Id+" "+data[6..]);
 
-            scenarios = currentScenario.GetAllTruePlayerMoves(CurrentPlayer);
+            _scenarios = CurrentScenario.GetAllTruePlayerMoves(CurrentPlayer);
 
-            if (scenarios.Count() == 0)
+            if (_scenarios.Count() == 0)
             {
-                if (currentScenario.IsCheckScenario(CurrentPlayer))
+                if (CurrentScenario.IsCheckScenario(CurrentPlayer))
                 {
                     Conclude("Checkmate", NotCurrentPlayer, CurrentPlayer);
                 }
@@ -105,10 +113,9 @@ namespace ChessApp.game
             }
         }
 
-        public void HandleMessageGameBoard(ChessPlayer player)
+        public void HandleMessageGameBoard(ChessPlayer player, string data)
         {
-            string board = WSMessageHandler.GetGameChessboardData(currentScenario.chessboardScenario);
-            player.SendToPlayer(board);
+            player.SendToPlayer(data);
 
             string hismove = WSMessageHandler.GetGameTurn(player == CurrentPlayer);
             player.SendToPlayer(hismove);
@@ -122,11 +129,11 @@ namespace ChessApp.game
                 int colo = gameMoveMessage.Item3;
                 int rown = gameMoveMessage.Item4;
                 int coln = gameMoveMessage.Item5;
-                IFigure chosenFigure = currentScenario.chessboardScenario[rowo, colo];
+                IFigure chosenFigure = CurrentScenario.ChessboardScenario[rowo, colo];
 
                 if (chosenFigure != null)
                 {
-                    foreach (var moveWithScenario in scenarios)
+                    foreach (var moveWithScenario in _scenarios)
                     {
                         if (
                             moveWithScenario.Item3.Issuer == chosenFigure &&
@@ -134,8 +141,8 @@ namespace ChessApp.game
                             moveWithScenario.Item2 == coln
                         )
                         {
-                            currentScenario = moveWithScenario.Item3;
-                            foreach (var figure in moveWithScenario.Item3.moved)
+                            CurrentScenario = moveWithScenario.Item3;
+                            foreach (var figure in moveWithScenario.Item3.Moved)
                             {
                                 figure.Moved = true;
                             }
@@ -159,12 +166,12 @@ namespace ChessApp.game
             {
                 int row = gameGetMoveMessage.Item2;
                 int col = gameGetMoveMessage.Item3;
-                IFigure chosenFigure = currentScenario.chessboardScenario[row, col];
+                IFigure chosenFigure = CurrentScenario.ChessboardScenario[row, col];
 
                 if (chosenFigure != null)
                 {
                     var moves = new HashSet<Tuple<int, int>>();
-                    foreach (var moveWithScenario in scenarios)
+                    foreach (var moveWithScenario in _scenarios)
                     {
                         if (moveWithScenario.Item3.Issuer == chosenFigure)
                         {
@@ -187,11 +194,11 @@ namespace ChessApp.game
         {
             if (player == TopPlayer)
             {
-                Conclude($"Surrendered by {TopPlayer.user.Name}", BottomPlayer, TopPlayer);
+                Conclude($"Surrendered by {TopPlayer.User.Name}", BottomPlayer, TopPlayer);
             }
             else if (player == BottomPlayer)
             {
-                Conclude($"Surrendered by {BottomPlayer.user.Name}", TopPlayer, BottomPlayer);
+                Conclude($"Surrendered by {BottomPlayer.User.Name}", TopPlayer, BottomPlayer);
             }
         }
 
@@ -199,11 +206,11 @@ namespace ChessApp.game
         {
             if (player == TopPlayer)
             {
-                player.SendToPlayer("User name - " + BottomPlayer.user.Name + "\nUser description - " + BottomPlayer.user.Description);
+                player.SendToPlayer("User name - " + BottomPlayer.User.Name + "\nUser description - " + BottomPlayer.User.Description);
             }
             else if (player == BottomPlayer)
             {
-                player.SendToPlayer("User name - " + TopPlayer.user.Name + "\nUser description - " + TopPlayer.user.Description);
+                player.SendToPlayer("User name - " + TopPlayer.User.Name + "\nUser description - " + TopPlayer.User.Description);
             }
         }
     }

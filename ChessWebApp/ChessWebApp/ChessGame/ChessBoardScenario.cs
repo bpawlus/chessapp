@@ -1,58 +1,58 @@
-﻿using ChessApp.game;
-using ChessApp.game.pieces;
-using ChessWebApp.Core.pieces;
+﻿using ChessWebApp.ChessGame;
+using ChessWebApp.ChessGame.Pieces;
+using ChessWebApp.ChessGame.Pieces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
-namespace ChessWebApp.Core
+namespace ChessWebApp.ChessGame
 {
     public class ChessBoardScenario
     {
-        public IFigure[,] chessboardScenario;
-        public bool kingBeaten = false;
+        public IFigure[,] ChessboardScenario;
+        public bool KingBeaten = false;
         public IFigure Issuer { get; }
-        public List<IFigure> moved = new List<IFigure>();
+        public List<IFigure> Moved = new List<IFigure>();
 
         public ChessBoardScenario(IFigure[,] baseChessboard, IFigure issuer)
         {
             Issuer = issuer;
-            chessboardScenario = new IFigure[ChessGameController.chessboardSize, ChessGameController.chessboardSize];
-            for (int i = 0; i < ChessGameController.chessboardSize; i++)
+            ChessboardScenario = new IFigure[ChessGameController.ChessboardSize, ChessGameController.ChessboardSize];
+            for (int i = 0; i < ChessGameController.ChessboardSize; i++)
             {
-                for (int j = 0; j < ChessGameController.chessboardSize; j++)
+                for (int j = 0; j < ChessGameController.ChessboardSize; j++)
                 {
-                    chessboardScenario[i, j] = baseChessboard[i, j];
+                    ChessboardScenario[i, j] = baseChessboard[i, j];
                 }
             }
         }
 
         public void MoveScenario(int oldRow, int oldCol, int newRow, int newCol)
         {
-            if(chessboardScenario[newRow, newCol] != null)
+            if(ChessboardScenario[newRow, newCol] != null)
             {
-                if(chessboardScenario[newRow, newCol] is King)
+                if(ChessboardScenario[newRow, newCol] is King)
                 {
-                    kingBeaten = true;
+                    KingBeaten = true;
                 }
             }
 
-            moved.Add(chessboardScenario[oldRow, oldCol]);
-            chessboardScenario[newRow, newCol] = chessboardScenario[oldRow, oldCol];
-            chessboardScenario[oldRow, oldCol] = null;
+            Moved.Add(ChessboardScenario[oldRow, oldCol]);
+            ChessboardScenario[newRow, newCol] = ChessboardScenario[oldRow, oldCol];
+            ChessboardScenario[oldRow, oldCol] = null;
         }
 
         public List<Tuple<int, int, ChessBoardScenario>> GetAllPlayerMoves(bool topPlayer)
         {
             List<Tuple<int, int, ChessBoardScenario>> allMyMoves = new List<Tuple<int, int, ChessBoardScenario>>();
 
-            for (int i = 0; i < ChessGameController.chessboardSize; i++)
+            for (int i = 0; i < ChessGameController.ChessboardSize; i++)
             {
-                for (int j = 0; j < ChessGameController.chessboardSize; j++)
+                for (int j = 0; j < ChessGameController.ChessboardSize; j++)
                 {
-                    if (chessboardScenario[i, j] != null && chessboardScenario[i, j].Owner.isTop == topPlayer)
+                    if (ChessboardScenario[i, j] != null && ChessboardScenario[i, j].Owner.IsTop == topPlayer)
                     {
-                        var myMoves = chessboardScenario[i, j].GetMovesWithScenarios(chessboardScenario);
+                        var myMoves = ChessboardScenario[i, j].GetMovesWithScenarios(ChessboardScenario);
                         allMyMoves.AddRange(myMoves);
                     }
                 }
@@ -65,13 +65,13 @@ namespace ChessWebApp.Core
         {
             List<Tuple<int, int, ChessBoardScenario>> allMyMoves = new List<Tuple<int, int, ChessBoardScenario>>();
 
-            for (int i = 0; i < ChessGameController.chessboardSize; i++)
+            for (int i = 0; i < ChessGameController.ChessboardSize; i++)
             {
-                for (int j = 0; j < ChessGameController.chessboardSize; j++)
+                for (int j = 0; j < ChessGameController.ChessboardSize; j++)
                 {
-                    if (chessboardScenario[i, j] != null && chessboardScenario[i, j].Owner.isTop == topPlayer)
+                    if (ChessboardScenario[i, j] != null && ChessboardScenario[i, j].Owner.IsTop == topPlayer)
                     {
-                        var myMoves = chessboardScenario[i, j].GetMovesCheckSave(chessboardScenario);
+                        var myMoves = ChessboardScenario[i, j].GetMovesCheckSave(ChessboardScenario);
                         allMyMoves.AddRange(myMoves);
                     }
                 }
@@ -82,17 +82,17 @@ namespace ChessWebApp.Core
 
         public List<Tuple<int, int, ChessBoardScenario>> GetAllTruePlayerMoves(ChessPlayer player)
         {
-            List<Tuple<int, int, ChessBoardScenario>> allMyMoves = GetAllPlayerMoves(player.isTop);
+            List<Tuple<int, int, ChessBoardScenario>> allMyMoves = GetAllPlayerMoves(player.IsTop);
             List<Tuple<int, int, ChessBoardScenario>> trueMyMoves = new List<Tuple<int, int, ChessBoardScenario>>();
 
             if (!IsCheckScenario(player))
             {
-                allMyMoves.AddRange(GetAllPlayerCheckSaveMoves(player.isTop));
+                allMyMoves.AddRange(GetAllPlayerCheckSaveMoves(player.IsTop));
             }
 
             foreach (var moveWithScenario in allMyMoves)
             {
-                if (!moveWithScenario.Item3.IsCheckScenario(player) && !moveWithScenario.Item3.kingBeaten)
+                if (!moveWithScenario.Item3.IsCheckScenario(player) && !moveWithScenario.Item3.KingBeaten)
                 {
                     trueMyMoves.Add(moveWithScenario);
                 }
@@ -103,11 +103,11 @@ namespace ChessWebApp.Core
 
         public bool IsCheckScenario(ChessPlayer player)
         {
-            List<Tuple<int, int, ChessBoardScenario>> allEnemyMoves = GetAllPlayerMoves(!player.isTop);
+            List<Tuple<int, int, ChessBoardScenario>> allEnemyMoves = GetAllPlayerMoves(!player.IsTop);
                 
             foreach (var moveWithScenario in allEnemyMoves)
             {
-                if (moveWithScenario.Item3.kingBeaten)
+                if (moveWithScenario.Item3.KingBeaten)
                 {
                     return true;
                 }

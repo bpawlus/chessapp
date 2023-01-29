@@ -1,6 +1,6 @@
-﻿using ChessWebApp.Core;
-using ChessWebApp.Core.pieces;
-using ChessWebApp.Core.piecesFactories;
+﻿using ChessWebApp.ChessGame;
+using ChessWebApp.ChessGame.Pieces;
+using ChessWebApp.ChessGame.Pieces;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChessApp.game.pieces
+namespace ChessWebApp.ChessGame.Pieces
 {
     public class KingFactory : FigureFactory
     {
@@ -42,8 +42,8 @@ namespace ChessApp.game.pieces
             for (int m = 0; m < rows.Length; m++)
             {
                 if (
-                    rows[m] >= 0 && rows[m] < ChessGameController.chessboardSize &&
-                    cols[m] >= 0 && cols[m] < ChessGameController.chessboardSize
+                    rows[m] >= 0 && rows[m] < ChessGameController.ChessboardSize &&
+                    cols[m] >= 0 && cols[m] < ChessGameController.ChessboardSize
                 )
                 {
                     if (board[rows[m], cols[m]] != null)

@@ -7,7 +7,8 @@ namespace ChessWebApp.Data
     {
         public static void Initialize(IServiceProvider serviceProvider)
         {
-            using (var context = new MvcGameContext(serviceProvider.GetRequiredService<DbContextOptions<MvcGameContext>>()))
+            var args = serviceProvider.GetRequiredService<DbContextOptions<MvcGameContext>>();
+            using (var context = new MvcGameContext(args))
             {
                 if (context.User.Any())
                 {

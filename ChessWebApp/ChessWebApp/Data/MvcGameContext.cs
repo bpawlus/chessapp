@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ChessWebApp.Models;
 using System.Reflection.Emit;
-using ChessWebApp.Core;
+using ChessWebApp.ChessGame;
 
 namespace ChessWebApp.Data
 {
@@ -25,6 +25,18 @@ namespace ChessWebApp.Data
                 user
                 .HasMany(a => a.GamesBottom)
                 .WithOne(b => b.PlayerBottom)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+
+                user
+                .HasMany(a => a.GamesWon)
+                .WithOne(b => b.PlayerWinner)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+
+                user
+                .HasMany(a => a.GamesLost)
+                .WithOne(b => b.PlayerLoser)
                 .OnDelete(DeleteBehavior.NoAction)
                 .IsRequired(false);
 
@@ -62,6 +74,7 @@ namespace ChessWebApp.Data
             });
         }
 
+        public DbSet<GameEvent> GameEvent { get; set; }
         public DbSet<User> User { get; set; }
         public DbSet<Game> Game { get; set; }
     }

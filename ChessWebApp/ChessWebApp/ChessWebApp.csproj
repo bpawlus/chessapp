@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Core\pieces\hfjkdzxw.rly~" />
+    <None Remove="ChessGame\Pieces\hfjkdzxw.rly~" />
   </ItemGroup>
 
   <ItemGroup>

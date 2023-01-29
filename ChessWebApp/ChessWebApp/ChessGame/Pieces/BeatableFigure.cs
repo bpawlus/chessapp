@@ -1,10 +1,10 @@
-﻿using ChessApp.game;
-using ChessApp.game.pieces;
+﻿using ChessWebApp.ChessGame;
+using ChessWebApp.ChessGame.Pieces;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace ChessWebApp.Core.pieces
+namespace ChessWebApp.ChessGame.Pieces
 {
     public abstract class BeatableFigure : IFigure
     {
@@ -22,9 +22,9 @@ namespace ChessWebApp.Core.pieces
 
         public Tuple<int, int> FindMe(IFigure[,] board)
         {
-            for (int i = 0; i < ChessGameController.chessboardSize; i++)
+            for (int i = 0; i < ChessGameController.ChessboardSize; i++)
             {
-                for (int j = 0; j < ChessGameController.chessboardSize; j++)
+                for (int j = 0; j < ChessGameController.ChessboardSize; j++)
                 {
                     if (board[i, j] == this)
                     {

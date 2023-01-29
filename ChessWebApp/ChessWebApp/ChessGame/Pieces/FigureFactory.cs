@@ -1,6 +1,7 @@
-﻿using ChessApp.game.pieces;
+﻿using ChessWebApp.ChessGame.Pieces;
+using ChessWebApp.ChessGame;
 
-namespace ChessWebApp.Core.piecesFactories
+namespace ChessWebApp.ChessGame.Pieces
 {
     public abstract class FigureFactory
     {
@@ -34,7 +35,7 @@ namespace ChessWebApp.Core.piecesFactories
         public IFigure GenerateFigure(ChessPlayer owner)
         {
             var figure = GeneraterRawFigure(owner);
-            var id = owner.isTop ? -1 : 1;
+            var id = owner.IsTop ? -1 : 1;
 
             figure.FigureId = (short)id;
             return figure;

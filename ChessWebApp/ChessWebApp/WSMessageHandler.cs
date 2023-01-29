@@ -3,8 +3,8 @@ using System;
 using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.Differencing;
-using ChessApp.game.pieces;
-using ChessWebApp.Core;
+using ChessWebApp.ChessGame.Pieces;
+using ChessWebApp.ChessGame;
 using System.Net.WebSockets;
 
 namespace ChessWebApp

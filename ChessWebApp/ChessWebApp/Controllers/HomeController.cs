@@ -10,8 +10,8 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Net.WebSockets;
 using System.Net;
 using System.Text;
-using ChessWebApp.Core;
-using ChessApp.game;
+using ChessWebApp.ChessGame;
+using ChessWebApp.ChessGame;
 using System.Numerics;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using static Azure.Core.HttpHeader;
@@ -49,7 +49,7 @@ namespace ChessWebApp.Controllers
                         user.VariantKnightLeft, user.VariantKnightRight,
                         user.VariantRookLeft, user.VariantRookRight,
                         user.VariantPawn1, user.VariantPawn2, user.VariantPawn3, user.VariantPawn4,
-                        user.VariantPawn5, user.VariantPawn6, user.VariantPawn7, user.VariantPawn8 
+                        user.VariantPawn5, user.VariantPawn6, user.VariantPawn7, user.VariantPawn8
             };
 
             var factoryIds = ChessPiecesFactories.GetFactoryIDs();
@@ -61,10 +61,10 @@ namespace ChessWebApp.Controllers
             }
 
             short kingFactory = 6;
-            
+
             factoryIds.Remove(kingFactory);
 
-            List<SelectListItem> kingItems = new List<SelectListItem>();
+            var kingItems = new List<SelectListItem>();
             var kingNames = ChessPiecesFactories.GetFactoryFigureNames(kingFactory);
             if (kingFactory != selected[0])
             {
@@ -78,7 +78,7 @@ namespace ChessWebApp.Controllers
 
             for (int i = 1; i < selected.Length; i++)
             {
-                List<SelectListItem> items = new List<SelectListItem>();
+                var items = new List<SelectListItem>();
 
                 foreach (short id in factoryIds)
                 {
@@ -108,10 +108,12 @@ namespace ChessWebApp.Controllers
                 var ele = ans.ToArray().ElementAt(0);
 
                 SetSelectListItems(ele);
+                ViewData["timesWon"] = UserVictories(ele.Id);
+                ViewData["timesLost"] = UserLoses(ele.Id);
 
                 return View(ele);
             }
- 
+
             return RedirectToAction(nameof(Login));
         }
 
@@ -134,29 +136,26 @@ namespace ChessWebApp.Controllers
                 user.Id = id;
                 try
                 {
-                    using (var db = _context)
-                    {
-                        db.User.Attach(user);
-                        db.Entry(user).Property(x => x.VariantPawn1).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantPawn2).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantPawn3).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantPawn4).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantPawn5).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantPawn6).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantPawn7).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantPawn8).IsModified = true;
+                    _context.User.Attach(user);
+                    _context.Entry(user).Property(x => x.VariantPawn1).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantPawn2).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantPawn3).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantPawn4).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantPawn5).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantPawn6).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantPawn7).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantPawn8).IsModified = true;
 
-                        db.Entry(user).Property(x => x.VariantKing).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantQueen).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantBishopLeft).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantBishopRight).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantRookLeft).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantRookRight).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantKnightLeft).IsModified = true;
-                        db.Entry(user).Property(x => x.VariantKnightRight).IsModified = true;
-                        db.Entry(user).Property(x => x.Description).IsModified = true;
-                        db.SaveChanges();
-                    }
+                    _context.Entry(user).Property(x => x.VariantKing).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantQueen).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantBishopLeft).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantBishopRight).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantRookLeft).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantRookRight).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantKnightLeft).IsModified = true;
+                    _context.Entry(user).Property(x => x.VariantKnightRight).IsModified = true;
+                    _context.Entry(user).Property(x => x.Description).IsModified = true;
+                    _context.SaveChanges();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -172,11 +171,6 @@ namespace ChessWebApp.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool UserExists(int id)
-        {
-            return _context.User.Any(e => e.Id == id);
         }
 
         public IActionResult Login()
@@ -295,6 +289,21 @@ namespace ChessWebApp.Controllers
             }
         }
 
+        private bool UserExists(int id)
+        {
+            return _context.User.Any(e => e.Id == id);
+        }
+
+        private int UserVictories(int id)
+        {
+            return _context.Game.Where(e => e.PlayerWinner.Id == id).Count();
+        }
+
+        private int UserLoses(int id)
+        {
+            return _context.Game.Where(e => e.PlayerLoser.Id == id).Count();
+        }
+
         private async Task ServeClient(WebSocket webSocket, User user)
         {
             var buffer = new byte[1024];
@@ -323,7 +332,7 @@ namespace ChessWebApp.Controllers
                     var receivedMessage2 = WSMessageHandler.HandleUserLogoutMessage(receiveResult);
                     if (receivedMessage2.Item1)
                     {
-                        
+
                         var game = GameFinder.FindGameOf(user);
                         if (game != null)
                         {
@@ -355,7 +364,7 @@ namespace ChessWebApp.Controllers
                                 game.Item1.HandleMessageGameMove(game.Item2, gameMoveMessage);
                                 continue;
                             }
-                            else if(gameGetMoveMessage.Item1)
+                            else if (gameGetMoveMessage.Item1)
                             {
                                 game.Item1.HandleMessageGameGetMove(game.Item2, gameGetMoveMessage);
                                 continue;
