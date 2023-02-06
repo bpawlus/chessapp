@@ -15,6 +15,7 @@ using ChessWebApp.ChessGame;
 using System.Numerics;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using static Azure.Core.HttpHeader;
+using NuGet.Packaging.Signing;
 
 namespace ChessWebApp.Controllers
 {
@@ -114,7 +115,7 @@ namespace ChessWebApp.Controllers
                 return View(ele);
             }
 
-            return RedirectToAction(nameof(Login));
+            return Unauthorized();
         }
 
         [HttpPost]
@@ -161,7 +162,7 @@ namespace ChessWebApp.Controllers
                 {
                     if (!UserExists(user.Id))
                     {
-                        return RedirectToAction(nameof(Index));
+                        return BadRequest();
                     }
                     else
                     {
@@ -170,11 +171,17 @@ namespace ChessWebApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return RedirectToAction(nameof(Index));
+            return Unauthorized();
         }
 
         public IActionResult Login()
         {
+            int? id = HttpContext.Session.GetInt32(SessionUserId);
+
+            if (id != null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
             return View();
         }
 
@@ -233,6 +240,39 @@ namespace ChessWebApp.Controllers
             return RedirectToAction(nameof(Login));
         }
 
+        public async Task<IActionResult> UserGames(int? userid)
+        {
+            var id = HttpContext.Session.GetInt32(SessionUserId);
+            var name = HttpContext.Session.GetString(SessionUserName);
+            if (id != null && name != null)
+            {
+                if (userid == null)
+                {
+                    return NotFound();
+                }
+
+                if(userid != id)
+                {
+                    return Unauthorized();
+                }
+
+                var games = UserAllGames(userid);
+
+                if (games == null)
+                {
+                    return NotFound();
+                }
+
+                var gamesList = await games.ToListAsync();
+
+                return View(gamesList);
+            }
+
+            return Unauthorized();
+        }
+
+
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
@@ -289,19 +329,35 @@ namespace ChessWebApp.Controllers
             }
         }
 
-        private bool UserExists(int id)
+        private bool UserExists(int? id)
         {
             return _context.User.Any(e => e.Id == id);
         }
 
-        private int UserVictories(int id)
+        private int UserVictories(int? id)
         {
             return _context.Game.Where(e => e.PlayerWinner.Id == id).Count();
         }
 
-        private int UserLoses(int id)
+        private int UserLoses(int? id)
         {
             return _context.Game.Where(e => e.PlayerLoser.Id == id).Count();
+        }
+
+        private IQueryable<GameDisplay> UserAllGames(int? id)
+        {
+            var result = (from game in _context.Game
+                          where (((game.PlayerWinner != null) && (game.PlayerLoser != null)) && ((game.PlayerWinner.Id == id) || (game.PlayerLoser.Id == id)))
+                          select new GameDisplay()
+                          {
+                                Id = game.Id,
+                                PlayerLoserName = game.PlayerLoser.Name,
+                                PlayerWinnerName = game.PlayerWinner.Name,
+                                TimeStart = game.TimeStart,
+                                TimeEnd = game.TimeEnd,
+                                Lost = (game.PlayerLoser.Id == id ? true : false),
+                          });;
+            return result;
         }
 
         private async Task ServeClient(WebSocket webSocket, User user)

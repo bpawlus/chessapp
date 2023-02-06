@@ -14,6 +14,8 @@ namespace ChessWebApp.Models
         public User? PlayerWinner { get; set; }
         [ForeignKey("PlayerLoserId")]
         public User? PlayerLoser { get; set; }
+        public DateTime? TimeStart { get; set; }
+        public DateTime? TimeEnd { get; set; }
         public ICollection<GameEvent>? GameEvents { get; set; }
     }
 }

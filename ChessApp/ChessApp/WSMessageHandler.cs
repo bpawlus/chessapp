@@ -16,6 +16,8 @@ namespace ChessApp
 {
     public static class WSMessageHandler
     {
+        public static bool SwappedPos { get; set; }
+
         public static void SendUserLoginMessage(WebSocket ws, string login, string password)
         {
             string header = $"L:{login} P:{password}";
@@ -35,12 +37,18 @@ namespace ChessApp
 
         public static void SendGameMoveMessage(WebSocket ws, int ro, int co, int rn, int cn)
         {
+            ro = !SwappedPos ? ro : 7 - ro;
+            co = !SwappedPos ? co : 7 - co;
+            rn = !SwappedPos ? rn : 7 - rn;
+            cn = !SwappedPos ? cn : 7 - cn;
             string header = $"GM RO:{ro} CO:{co} RN:{rn} CN:{cn}";
             SendAsync(ws, header);
         }
 
         public static void SendGameGetMoveMessage(WebSocket ws, int ro, int co)
         {
+            ro = !SwappedPos ? ro : 7 - ro;
+            co = !SwappedPos ? co : 7 - co;
             string header = $"GM R:{ro} C:{co}";
             SendAsync(ws, header);
         }
@@ -88,6 +96,25 @@ namespace ChessApp
                 }
             }
             return new Tuple<bool, bool>(correct, yourturn);
+        }
+
+        public static Tuple<bool, bool> HandleGameStartPosition(string message)
+        {
+            bool correct = false;
+            bool istop = false;
+
+            string filter = @"GPOSTOP: (T|F)";
+            Regex rg = new Regex(filter);
+            MatchCollection mc = Regex.Matches(message, filter);
+            if (mc.Count == 1)
+            {
+                foreach (Match match in mc)
+                {
+                    correct = true;
+                    istop = match.Groups[1].Value == "T" ? true : false;
+                }
+            }
+            return new Tuple<bool, bool>(correct, istop);
         }
 
         public static Tuple<bool, bool, string> HandleGameStatusMessage(string message)
@@ -166,7 +193,14 @@ namespace ChessApp
                         }
                     }
 
-                    figures.Add(new ChessFigure(figname, ro, co));
+                    if (!SwappedPos)
+                    {
+                        figures.Add(new ChessFigure(figname, ro, co));
+                    }
+                    else
+                    {
+                        figures.Add(new ChessFigure(figname, 7 - ro, 7 - co));
+                    }
                 }
             }
 
@@ -199,7 +233,14 @@ namespace ChessApp
                 {
                     int ro = Int16.Parse(match.Groups[1].Value);
                     int co = Int16.Parse(match.Groups[2].Value);
-                    moves.Add(new Tuple<int, int>(ro, co));
+                    if (!SwappedPos)
+                    {
+                        moves.Add(new Tuple<int, int>(ro, co));
+                    }
+                    else
+                    {
+                        moves.Add(new Tuple<int, int>(7 - ro, 7 - co));
+                    }
                 }
             }
 

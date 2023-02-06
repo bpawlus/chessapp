@@ -9,7 +9,6 @@ namespace ChessWebApp.Models
         [ForeignKey("GameId")]
         public Game? Game { get; set; }
         public string ActionDescription { get; set; }
-        [Timestamp]
-        public Byte[] TimeStamp { get; set; }
+        public DateTime? Time { get; set; }
     }
 }

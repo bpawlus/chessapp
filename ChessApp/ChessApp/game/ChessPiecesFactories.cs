@@ -1,6 +1,6 @@
 ﻿using ChessApp.game;
 using ChessApp.game.pieces;
-using ChessWebApp.Core.piecesFactories;
+using ChessApp.Game;
 using System;
 using System.Collections.Generic;
 using System.Windows.Documents;

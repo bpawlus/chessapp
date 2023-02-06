@@ -212,6 +212,14 @@ namespace ChessWebApp
             return "GS: " + startorend + " " + message;
         }
 
+        public static string GetGameStartPosition(bool istop)
+        {
+            string movelabel = istop ? "T" : "F";
+            string header = "GPOSTOP: " + movelabel;
+
+            return header;
+        }
+
         public static void SendServiceLoginOk(WebSocket ws)
         {
             string header = "L OK";

@@ -31,6 +31,7 @@ namespace ChessWebApp.ChessGame
                 var game = new Game();
                 game.PlayerTop = ele1;
                 game.PlayerBottom = ele2;
+                game.TimeStart = DateTime.Now;
 
                 context.Game.Add(game);
                 context.SaveChanges();
@@ -49,6 +50,7 @@ namespace ChessWebApp.ChessGame
                 var gameEvent = new GameEvent();
                 gameEvent.Game = ele1;
                 gameEvent.ActionDescription = status;
+                gameEvent.Time = DateTime.Now;
 
                 context.GameEvent.Add(gameEvent);
                 context.SaveChanges();
@@ -97,12 +99,14 @@ namespace ChessWebApp.ChessGame
 
                 game.PlayerWinner = elewinner;
                 game.PlayerLoser = eleloser;
+                game.TimeEnd = DateTime.Now;
 
                 try
                 {
                     context.Game.Attach(game);
                     context.Entry(game).Reference(x => x.PlayerWinner).IsModified = true;
                     context.Entry(game).Reference(x => x.PlayerLoser).IsModified = true;
+                    context.Entry(game).Property(x => x.TimeEnd).IsModified = true;
                     context.SaveChanges();
                 }
                 catch (DbUpdateConcurrencyException)

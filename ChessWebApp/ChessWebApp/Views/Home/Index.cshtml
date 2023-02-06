@@ -37,6 +37,7 @@
 
 <div class="text-center">
     <h1 class="display-2">Welcome, @Model.Name</h1>
+    <h1 class="display-16">Your board preference:</h1>
 
     <form asp-controller="Home" asp-action="EditBoard" method="post" class="w-75 mx-auto">
         <table class="table">
@@ -214,9 +215,16 @@
     </form>
 </div>
 
-<div class="alert alert-primary" role="alert">
-    Games Won: @ViewBag.timesWon
-</div>
-<div class="alert alert-secondary" role="alert">
-    Games Lost: @ViewBag.timesLost
+<div class="text-center">
+    <h1 class="display-16">Your recent games:</h1>
+
+    <div class="alert alert-success" role="alert">
+        Games Won: @ViewBag.timesWon
+    </div>
+
+    <div class="alert alert-danger" role="alert">
+        Games Lost: @ViewBag.timesLost
+    </div>
+
+    <a asp-action="UserGames" asp-route-userid=@Model.Id class="btn btn-primary" method="get">Show recent games</a>
 </div>

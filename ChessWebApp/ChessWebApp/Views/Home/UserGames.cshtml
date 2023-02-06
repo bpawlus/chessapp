@@ -1,0 +1,79 @@
+﻿@model IEnumerable<ChessWebApp.Models.GameDisplay>
+
+
+@{
+    ViewData["Title"] = "Home";
+    string winLostClass = "";
+}
+
+
+<div class="d-flex bd-highlight bg-dark text-white border-bottom box-shadow mb-3">
+    <div class="p-2 flex-grow-1 bd-highlight">Chess - Web App</div>
+    <div class="p-2 bd-highlight">
+        <form asp-controller="Home" asp-action="Index" method="post">
+            <input id="index" type="submit" value="Return to Profile" class="btn-secondary" />
+        </form>
+    </div>
+    <div class="p-2 bd-highlight">
+        <form asp-controller="Home" asp-action="Logout" method="post">
+            <input id="logout" type="submit" value="Logout" class="btn-secondary" />
+        </form>
+    </div>
+</div>
+
+<table class="w-75 mx-auto text-center">
+    <thead>
+        <tr>
+            <th>
+                Winner
+            </th>
+            <th>
+                Loser
+            </th>
+            <th>
+                Game start
+            </th>
+            <th>
+                Game end
+            </th>
+            <!--
+            <th>
+                View
+            </th>
+            -->
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            if (item.Lost)
+            {
+                winLostClass = "alert alert-danger";
+            }
+            else
+            {
+                winLostClass = "alert alert-success";
+            }
+
+            <tr class="@winLostClass">
+                <td class="p-2">
+                    @Html.DisplayFor(modelItem => item.PlayerWinnerName)
+                </td>
+                <td class="p-2">
+                    @Html.DisplayFor(modelItem => item.PlayerLoserName)
+                </td>
+                <td class="p-2">
+                    @Html.DisplayFor(modelItem => item.TimeStart)
+                </td>
+                <td class="p-2">
+                    @Html.DisplayFor(modelItem => item.TimeEnd)
+                </td>
+                <!--
+                <td class="p-2">
+                    <a asp-action="Game" asp-route-id="@item.Id" class="btn btn-primary">View Game</a>
+                </td>
+                -->
+            </tr>
+        }
+    </tbody>
+</table>

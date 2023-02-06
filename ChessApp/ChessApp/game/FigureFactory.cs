@@ -1,7 +1,7 @@
 ﻿using ChessApp.game.pieces;
 using System.Windows.Documents;
 
-namespace ChessWebApp.Core.piecesFactories
+namespace ChessApp.Game
 {
     public class FigureFactory
     {

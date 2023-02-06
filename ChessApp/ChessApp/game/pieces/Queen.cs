@@ -1,5 +1,5 @@
-﻿using ChessWebApp.Core;
-using ChessWebApp.Core.piecesFactories;
+﻿using ChessApp.Game;
+using ChessWebApp.Core;
 
 namespace ChessApp.game.pieces
 {

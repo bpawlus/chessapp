@@ -133,29 +133,6 @@ namespace ChessApp
             InitializeComponent();
             InitializeBoard();
             loginStatus.Text = "Login status: OFFLINE";
-
-            /*
-                        string figname = ChessPiecesEnumTranslator.TrasnslateShortToImage((short)2);
-                        figures.Add(new ChessFigure(figname, 0, 0));
-                        figures.Add(new ChessFigure(figname, 0, 2));
-                        figname = ChessPiecesEnumTranslator.TrasnslateShortToImage((short)-5);
-                        highlights.Add(new Tuple<int, int>(5, 5));
-                        highlights.Add(new Tuple<int, int>(6, 6));
-                        figures.Add(new ChessFigure(figname, 1, 1));
-
-                        RefreshBoard();
-                        RefreshHighlights();
-
-                        highlights.Clear();
-                        figures.Clear();
-
-                        figures.Add(new ChessFigure(figname, 1, 3));
-                        highlights.Add(new Tuple<int, int>(3, 3));
-                        highlights.Add(new Tuple<int, int>(2, 3));
-
-                        RefreshBoard();
-                        RefreshHighlights();
-            */
         }
 
         private void addFieldLabel(char label, int col, int row) {
@@ -193,14 +170,14 @@ namespace ChessApp
 
             for (int i = 0; i < GameController.chessboardSize; i++)
             {
-                addFieldLabel(GameController.boardRowNames[i], 0, i+1);
-                addFieldLabel(GameController.boardRowNames[i], GameController.boardRowNames.Length+1, i+1);
+                addFieldLabel(' ', 0, i + 1);
+                addFieldLabel(' ', GameController.boardRowNames.Length + 1, i + 1);
             }
 
             for (int i = 0; i < GameController.boardColNames.Length; i++)
             {
-                addFieldLabel(GameController.boardColNames[i], i+1, 0);
-                addFieldLabel(GameController.boardColNames[i], i+1, GameController.boardColNames.Length + 1);
+                addFieldLabel(' ', i + 1, 0);
+                addFieldLabel(' ', i + 1, GameController.boardColNames.Length + 1);
             }
 
             addFieldLabel(' ', 0, 0);
@@ -230,6 +207,8 @@ namespace ChessApp
 
         private async void FindGame(object sender, RoutedEventArgs e)
         {
+            figures.Clear();
+            RefreshBoard();
             menuGameFind.IsEnabled = false;
             WSMessageHandler.SendUserFindGameMessage(ws);
         }
@@ -271,30 +250,30 @@ namespace ChessApp
             loginStatus.Text = "Login status: OFFLINE";
         }
 
-        private void SetOnline()
+        private void SetOnline(string login)
         {
             menuAccountLogin.IsEnabled = false;
             menuAccountLogout.IsEnabled = true;
 
-            SetOffgame();
+            SetOffgame(login);
         }
 
-        private void SetIngame()
+        private void SetIngame(string login)
         {
             menuGameFind.IsEnabled = false;
             menuGameOpponent.IsEnabled = true;
             menuGameGiveUp.IsEnabled = true;
 
-            loginStatus.Text = "Login status: ONLINE - INGAME";
+            loginStatus.Text = $"Login status: ONLINE AS {login} - INGAME";
         }
 
-        private void SetOffgame()
+        private void SetOffgame(string login)
         {
             menuGameFind.IsEnabled = true;
             menuGameOpponent.IsEnabled = false;
             menuGameGiveUp.IsEnabled = false;
 
-            loginStatus.Text = "Login status: ONLINE";
+            loginStatus.Text = $"Login status: ONLINE AS {login}";
         }
 
         private void ApplicationExit(object sender, CancelEventArgs e)
@@ -376,19 +355,52 @@ namespace ChessApp
                             }
                         }
 
+                        var gameStart = WSMessageHandler.HandleGameStartPosition(result);
+                        if (gameStart.Item1)
+                        {
+                            if (gameStart.Item2)
+                            {
+                                WSMessageHandler.SwappedPos = true;
+                                for (int i = 0; i < GameController.chessboardSize; i++)
+                                {
+                                    addFieldLabel(GameController.boardRowNames[7-i], 0, i + 1);
+                                    addFieldLabel(GameController.boardRowNames[7-i], GameController.boardRowNames.Length + 1, i + 1);
+                                }
+
+                                for (int i = 0; i < GameController.boardColNames.Length; i++)
+                                {
+                                    addFieldLabel(GameController.boardColNames[7-i], i + 1, 0);
+                                    addFieldLabel(GameController.boardColNames[7-i], i + 1, GameController.boardColNames.Length + 1);
+                                }
+                            }
+                            else
+                            {
+                                WSMessageHandler.SwappedPos = false;
+                                for (int i = 0; i < GameController.chessboardSize; i++)
+                                {
+                                    addFieldLabel(GameController.boardRowNames[i], 0, i + 1);
+                                    addFieldLabel(GameController.boardRowNames[i], GameController.boardRowNames.Length + 1, i + 1);
+                                }
+
+                                for (int i = 0; i < GameController.boardColNames.Length; i++)
+                                {
+                                    addFieldLabel(GameController.boardColNames[i], i + 1, 0);
+                                    addFieldLabel(GameController.boardColNames[i], i + 1, GameController.boardColNames.Length + 1);
+                                }
+                            }
+                        }
+
                         var gameStatusMessage = WSMessageHandler.HandleGameStatusMessage(result);
                         if (gameStatusMessage.Item1)
                         {
                             if (gameStatusMessage.Item2)
                             {
-                                SetIngame();
+                                SetIngame(login);
                                 PopMessage(gameStatusMessage.Item3);
                             }
                             else
                             {
-                                figures.Clear();
-                                RefreshBoard();
-                                SetOffgame();
+                                SetOffgame(login);
                                 turnStatus.Text = "";
                                 PopMessage(gameStatusMessage.Item3);
                             }
@@ -399,7 +411,7 @@ namespace ChessApp
                         if (serviceLoginOk.Item1)
                         {
                             PopMessage("Successful Login!");
-                            SetOnline();
+                            SetOnline(login);
                             continue;
                         }
                     }

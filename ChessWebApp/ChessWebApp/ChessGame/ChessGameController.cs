@@ -28,7 +28,7 @@ namespace ChessWebApp.ChessGame
         public ChessPlayer CurrentPlayer { get; set; }
         public ChessPlayer NotCurrentPlayer { get; set; }
         private List<Tuple<int, int, ChessBoardScenario>> _scenarios;
-        public Game Game;
+        public Game Game { get; }
 
         public ChessGameController(ChessPlayer topPlayer, ChessPlayer bottomPlayer)
         {
@@ -76,6 +76,8 @@ namespace ChessWebApp.ChessGame
             TopPlayer = CurrentPlayer = topPlayer;
             BottomPlayer = NotCurrentPlayer = bottomPlayer;
 
+            HandleMessageGameStartPosition();
+
             CurrentScenario = new ChessBoardScenario(chessboard, null);
             UpdateGameState();
         }
@@ -83,8 +85,8 @@ namespace ChessWebApp.ChessGame
         private void Conclude(string info, ChessPlayer winner, ChessPlayer loser)
         {
             Console.WriteLine($"WS Game Info - ({TopPlayer.User.Name} vs {BottomPlayer.User.Name}) - {info} - {winner.User.Name} won!");
-            winner.SendToPlayer(WSMessageHandler.GetGameStatusMessage($"GAME OVER! You won!\nReason: {info}", false));
-            loser.SendToPlayer(WSMessageHandler.GetGameStatusMessage($"GAME OVER! You lost!\nReason: {info}", false));
+            winner.SendToPlayer(WSMessageHandler.GetGameStatusMessage($"GAME OVER! You won! Reason: {info}", false));
+            loser.SendToPlayer(WSMessageHandler.GetGameStatusMessage($"GAME OVER! You lost! Reason: {info}", false));
             GameFinder.ConcludeGame(this, winner, loser);
         }
 
@@ -119,6 +121,15 @@ namespace ChessWebApp.ChessGame
 
             string hismove = WSMessageHandler.GetGameTurn(player == CurrentPlayer);
             player.SendToPlayer(hismove);
+        }
+
+        public void HandleMessageGameStartPosition()
+        {
+            string topMsg = WSMessageHandler.GetGameStartPosition(true);
+            TopPlayer.SendToPlayer(topMsg);
+
+            string botMsg = WSMessageHandler.GetGameStartPosition(false);
+            BottomPlayer.SendToPlayer(botMsg);
         }
 
         public void HandleMessageGameMove(ChessPlayer player, Tuple<bool, int, int, int, int> gameMoveMessage)
@@ -206,11 +217,11 @@ namespace ChessWebApp.ChessGame
         {
             if (player == TopPlayer)
             {
-                player.SendToPlayer("User name - " + BottomPlayer.User.Name + "\nUser description - " + BottomPlayer.User.Description);
+                player.SendToPlayer(WSMessageHandler.GetGameCustomMessage("User name - " + BottomPlayer.User.Name + " User description - " + BottomPlayer.User.Description));
             }
             else if (player == BottomPlayer)
             {
-                player.SendToPlayer("User name - " + TopPlayer.User.Name + "\nUser description - " + TopPlayer.User.Description);
+                player.SendToPlayer(WSMessageHandler.GetGameCustomMessage("User name - " + TopPlayer.User.Name + " User description - " + TopPlayer.User.Description));
             }
         }
     }
