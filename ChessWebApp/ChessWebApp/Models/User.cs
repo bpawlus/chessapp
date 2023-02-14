@@ -57,5 +57,7 @@ namespace ChessWebApp.Models
         public ICollection<Game>? GamesBottom { get; set; }
         public ICollection<Game>? GamesWon { get; set; }
         public ICollection<Game>? GamesLost { get; set; }
+        public ICollection<GameEvent>? GameEvents { get; set; }
+        public ICollection<GameEventComment>? Comments { get; set; }
     }
 }

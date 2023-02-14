@@ -1,0 +1,146 @@
+﻿@model IEnumerable<ChessWebApp.Models.GameEventDto>
+
+
+@{
+    ViewData["Title"] = "Game Summary";
+    char[] boardRowNames = @ViewBag.boardRowNames;
+    char[] boardColNames = @ViewBag.boardColNames;
+    int chessboardSize = @ViewBag.chessboardSize;
+    bool odd = false;
+}
+
+<script type="text/javascript">
+    var pictures = @Html.Raw(Json.Serialize(@ViewBag.pictures));
+
+    function ReloadChessboard(status) {
+        for (let row = 0; row < @chessboardSize; row++) {
+            for (let col = 0; col < @chessboardSize; col++) {
+                field = document.getElementById("f" + row + col).src = "";
+            }
+        }
+        const regex = new RegExp(" ");
+        const split = status.split(regex);
+        split.forEach((pair) => {
+            const regex2 = new RegExp(",");
+            const digits = pair.split(regex2);
+
+            fig = digits[0];
+            row = digits[1];
+            col = digits[2];
+
+            field = document.getElementById("f" + row + col).src = "/resources/" + pictures[fig];
+        })
+    }
+</script>
+
+<div class="d-flex bd-highlight bg-dark text-white border-bottom box-shadow mb-3">
+    <div class="p-2 flex-grow-1 bd-highlight">Chess - Web App</div>
+    <div class="p-2 bd-highlight">
+        <form asp-controller="Home" asp-action="Index" method="post">
+            <input id="index" type="submit" value="Return to Profile" class="btn-secondary" />
+        </form>
+    </div>
+    <div class="p-2 bd-highlight">
+        <form asp-controller="Home" asp-action="Logout" method="post">
+            <input id="logout" type="submit" value="Logout" class="btn-secondary" />
+        </form>
+    </div>
+</div>
+<h1 class="text-center display-16">Game preview:</h1>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg text-center">
+            <table class="chessboard">
+                <tbody>
+                    <tr>
+                        <th class="chessboardField chessboardFieldLabel">
+                
+                        </th>
+                    @for (int i = 0; i < chessboardSize; i++)
+                    {
+                        <th class="chessboardField chessboardFieldLabel">
+                            @boardColNames[i]
+                        </th>
+                    }
+                        <th class="chessboardField chessboardFieldLabel">
+                
+                        </th>
+                    </tr>
+
+                    @for (int i = 0; i < chessboardSize; i++)
+                    {
+                    <tr>
+                        <th class="chessboardField chessboardFieldLabel">
+                            @boardRowNames[i]
+                        </th>
+                        @for (int j = 0; j < chessboardSize; j++)
+                        {
+                            @if(odd) {
+                                <th class="chessboardField chessboardFieldOdd">
+                                    <img id="f@(i)@(j)" style="width:100%; display:block; margin-left:auto; margin-right:auto" />
+                                </th>;
+                            }
+                            else {
+                                <th class="chessboardField chessboardFieldEven" >
+                                    <img id="f@(i)@(j)" style="width:100%; display:block; margin-left:auto; margin-right:auto" />
+                                </th>;
+                            }
+
+                            odd = !odd;
+                        }
+                            <th class="chessboardField chessboardFieldLabel">
+                            @boardRowNames[i]
+                        </th>
+                    </tr>
+                        odd = !odd;
+                    }
+
+                    <tr>
+                        <th class="chessboardField chessboardFieldLabel">
+                
+                        </th>
+                    @for (int i = 0; i < chessboardSize; i++)
+                    {
+                        <th class="chessboardField chessboardFieldLabel">
+                            @boardColNames[i]
+                        </th>
+                    }
+                        <th class="chessboardField chessboardFieldLabel">
+                
+                        </th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-lg">
+            <p class="link-dark text-decoration-none border-bottom">
+                Game Moves:
+            </p>
+            <div class="overflow-auto border-bottom" style="height: 400px;">
+                @foreach (var item in Model)
+                {
+                    <div class="container justify-content-between text-center">
+                        <div class="border border-dark m-1 row btn-outline-dark" onclick="ReloadChessboard('@item.Status');" style="height: 50px;">
+                            <div class="col-2 align-self-center">
+                                @if(item.IsTop) {
+                                    <div class="mx-auto align-center border border-dark" style=" height: 30px;width: 30px;background-color:black;"></div>
+                                }
+                                else {
+                                    <div class="mx-auto align-center border border-dark" style=" height: 30px;width: 30px;background-color:white;"></div>
+                                }
+                            </div>
+                            <div class="col-4 align-self-center">
+                                @item.Notation
+                            </div>
+                            <div class="col-6 align-self-center">
+                                <input type="text" value=@item.GameEventComment?.Comment>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

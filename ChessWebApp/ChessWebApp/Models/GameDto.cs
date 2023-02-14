@@ -2,9 +2,9 @@
 
 namespace ChessWebApp.Models
 {
-    public class GameDisplay
+    public class GameDto
     {
-        public GameDisplay()
+        public GameDto()
         {
 
         }

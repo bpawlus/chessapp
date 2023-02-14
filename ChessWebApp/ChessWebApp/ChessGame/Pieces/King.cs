@@ -29,6 +29,8 @@ namespace ChessWebApp.ChessGame.Pieces
         {
         }
 
+        public override char NotationName => 'K';
+
         public override List<Tuple<int, int, ChessBoardScenario>> GetMovesWithScenarios(IFigure[,] board)
         {
             List<Tuple<int, int, ChessBoardScenario>> toRet = new List<Tuple<int, int, ChessBoardScenario>> ();
@@ -104,6 +106,7 @@ namespace ChessWebApp.ChessGame.Pieces
                     ChessBoardScenario scenario = new ChessBoardScenario(board, this);
                     scenario.MoveScenario(ipos, jpos, ipos, jpos - 2);
                     scenario.MoveScenario(ipos, 0, ipos, jpos - 1);
+                    scenario.SetCustomNotation("O-O");
 
                     toRet.Add(new Tuple<int, int, ChessBoardScenario>(ipos, jpos - 2, scenario));
                 }
@@ -116,6 +119,7 @@ namespace ChessWebApp.ChessGame.Pieces
                     ChessBoardScenario scenario = new ChessBoardScenario(board, this);
                     scenario.MoveScenario(ipos, jpos, ipos, jpos + 2);
                     scenario.MoveScenario(ipos, 7, ipos, jpos + 1);
+                    scenario.SetCustomNotation("O-O-O");
 
                     toRet.Add(new Tuple<int, int, ChessBoardScenario>(ipos, jpos + 2, scenario));
                 }

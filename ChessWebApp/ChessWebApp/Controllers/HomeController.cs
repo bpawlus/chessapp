@@ -16,6 +16,8 @@ using System.Numerics;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using static Azure.Core.HttpHeader;
 using NuGet.Packaging.Signing;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.Design;
 
 namespace ChessWebApp.Controllers
 {
@@ -41,8 +43,20 @@ namespace ChessWebApp.Controllers
             _context = context;
         }
 
+        private void LoadPicturesToViewBag()
+        {
+            var factoryIds = ChessPiecesFactories.GetFactoryIDs();
+            var pictures = new Dictionary<short, string>();
 
-        private void SetSelectListItems(User user)
+            foreach (short id in factoryIds)
+            {
+                pictures.Add(id, ChessPiecesFactories.GetFactoryFigureNames(id).Item2);
+                pictures.Add((short)-id, ChessPiecesFactories.GetFactoryFigureNames(id).Item3);
+            }
+
+            ViewData["pictures"] = pictures;
+        }
+        private void LoadSelectListItemsToViewBag(User user)
         {
             short[] selected = new short[]{
                         user.VariantKing, user.VariantQueen,
@@ -54,13 +68,6 @@ namespace ChessWebApp.Controllers
             };
 
             var factoryIds = ChessPiecesFactories.GetFactoryIDs();
-            var pictures = new Dictionary<short, string>();
-
-            foreach (short id in factoryIds)
-            {
-                pictures.Add(id, ChessPiecesFactories.GetFactoryFigureNames(id).Item2);
-            }
-
             short kingFactory = 6;
 
             factoryIds.Remove(kingFactory);
@@ -97,7 +104,6 @@ namespace ChessWebApp.Controllers
             }
 
             ViewData["keys"] = keys;
-            ViewData["pictures"] = pictures;
         }
         public IActionResult Index()
         {
@@ -108,7 +114,8 @@ namespace ChessWebApp.Controllers
                 var ans = _context.User.Where(dbuser => dbuser.Id == id);
                 var ele = ans.ToArray().ElementAt(0);
 
-                SetSelectListItems(ele);
+                LoadPicturesToViewBag();
+                LoadSelectListItemsToViewBag(ele);
                 ViewData["timesWon"] = UserVictories(ele.Id);
                 ViewData["timesLost"] = UserLoses(ele.Id);
 
@@ -256,7 +263,7 @@ namespace ChessWebApp.Controllers
                     return Unauthorized();
                 }
 
-                var games = UserAllGames(userid);
+                var games = UserGamesDto(userid);
 
                 if (games == null)
                 {
@@ -266,6 +273,40 @@ namespace ChessWebApp.Controllers
                 var gamesList = await games.ToListAsync();
 
                 return View(gamesList);
+            }
+
+            return Unauthorized();
+        }
+
+        public async Task<IActionResult> GameSummary(int? gameid)
+        {
+            var id = HttpContext.Session.GetInt32(SessionUserId);
+            var name = HttpContext.Session.GetString(SessionUserName);
+            if (id != null && name != null)
+            {
+                if (gameid == null)
+                {
+                    return NotFound();
+                }
+                var game = FindGameIfPlayerPlayed(gameid, id);
+                if (game == null)
+                {
+                    return NotFound();
+                }
+
+                var gameEvents = UserGameEventsDto(gameid, id);
+
+                if (gameEvents == null)
+                {
+                    return NotFound();
+                }
+
+                var gameEventsList = await gameEvents.ToListAsync();
+                LoadPicturesToViewBag();
+                ViewData["boardRowNames"] = ChessGameController.BoardRowNames;
+                ViewData["boardColNames"] = ChessGameController.BoardColNames;
+                ViewData["chessboardSize"] = ChessGameController.ChessboardSize;
+                return View(gameEventsList);
             }
 
             return Unauthorized();
@@ -344,11 +385,11 @@ namespace ChessWebApp.Controllers
             return _context.Game.Where(e => e.PlayerLoser.Id == id).Count();
         }
 
-        private IQueryable<GameDisplay> UserAllGames(int? id)
+        private IQueryable<GameDto> UserGamesDto(int? id)
         {
             var result = (from game in _context.Game
                           where (((game.PlayerWinner != null) && (game.PlayerLoser != null)) && ((game.PlayerWinner.Id == id) || (game.PlayerLoser.Id == id)))
-                          select new GameDisplay()
+                          select new GameDto()
                           {
                                 Id = game.Id,
                                 PlayerLoserName = game.PlayerLoser.Name,
@@ -358,6 +399,55 @@ namespace ChessWebApp.Controllers
                                 Lost = (game.PlayerLoser.Id == id ? true : false),
                           });;
             return result;
+        }
+
+        private Game FindGameIfPlayerPlayed(int? gameid, int? userid)
+        {
+            var ans = _context.Game.Where(e => e.Id == gameid && (e.PlayerBottom.Id == userid || e.PlayerWinner.Id == userid));
+            if (ans.Count() > 0)
+            {
+                return ans.ToArray().ElementAt(0);
+            }
+            return null;
+        }
+
+        private GameEventComment FindComment(int? eventid, int? userid)
+        {
+            var ans = _context.GameEventComment.Where(e => e.GameEvent != null && e.GameEvent.Id == eventid && e.User.Id == userid);
+            if (ans.Count() > 0)
+            {
+                return ans.ToArray().ElementAt(0);
+            }
+            return null;
+        }
+
+        private IQueryable<GameEventDto> UserGameEventsDto(int? gameid, int? userid)
+        {
+            var ans = _context.Game.Where(e => e.Id == gameid).Select(e => new Tuple<int,int>(e.PlayerTop.Id, e.PlayerBottom.Id));
+            if (ans.Count() > 0)
+            {
+                var ele = ans.ToArray().ElementAt(0);
+                var topAndBot = ans.ToArray().ElementAt(0);
+
+                var result = (from gameevent in _context.GameEvent
+                              where (gameevent.Game.Id == gameid)
+                              select new GameEventDto()
+                              {
+                                  Id = gameevent.Id,
+                                  Status = gameevent.Status,
+                                  Notation = gameevent.Notation,
+                                  Time = gameevent.Time,
+                                  GameEventComment = null,
+                                  IsTop = gameevent.User.Id == ele.Item1 ? true : false
+                              });
+
+                foreach(var res in result)
+                {
+                    res.GameEventComment = FindComment(res.Id, userid);
+                }
+                return result;
+            }
+            return null;
         }
 
         private async Task ServeClient(WebSocket webSocket, User user)

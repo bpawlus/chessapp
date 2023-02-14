@@ -13,6 +13,7 @@ namespace ChessWebApp.ChessGame
         public bool KingBeaten = false;
         public IFigure Issuer { get; }
         public List<IFigure> Moved = new List<IFigure>();
+        private string _notation = "";
 
         public ChessBoardScenario(IFigure[,] baseChessboard, IFigure issuer)
         {
@@ -27,15 +28,41 @@ namespace ChessWebApp.ChessGame
             }
         }
 
+        public void SetCustomNotation(string newNotation)
+        {
+            _notation = newNotation;
+        }
+
+        public void AppendToNotation(string extraNotation)
+        {
+            _notation += extraNotation;
+        }
+
+        public string GetNotation()
+        {
+            return _notation;
+        }
+
         public void MoveScenario(int oldRow, int oldCol, int newRow, int newCol)
         {
-            if(ChessboardScenario[newRow, newCol] != null)
+            _notation += Issuer.NotationName;
+            var pos = Issuer.FindMe(ChessboardScenario);
+            _notation += char.ToLower(ChessGameController.BoardColNames[pos.Item2]);
+            _notation += char.ToLower(ChessGameController.BoardRowNames[pos.Item1]);
+            if (ChessboardScenario[newRow, newCol] != null)
             {
-                if(ChessboardScenario[newRow, newCol] is King)
+                if (ChessboardScenario[newRow, newCol] is King)
                 {
                     KingBeaten = true;
                 }
+                else
+                {
+                    _notation += "x";
+                }
             }
+
+            _notation += char.ToLower(ChessGameController.BoardColNames[newCol]);
+            _notation += char.ToLower(ChessGameController.BoardRowNames[newRow]);
 
             Moved.Add(ChessboardScenario[oldRow, oldCol]);
             ChessboardScenario[newRow, newCol] = ChessboardScenario[oldRow, oldCol];

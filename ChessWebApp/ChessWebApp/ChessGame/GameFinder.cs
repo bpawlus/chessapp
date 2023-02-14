@@ -40,17 +40,22 @@ namespace ChessWebApp.ChessGame
             }
         }
 
-        public static GameEvent AddBoardStatus(Game game, string status)
+        public static GameEvent AddBoardStatus(Game game, string status, User user, string notation)
         {
             using (var context = new MvcGameContext(_connectionSettings))
             {
                 var ans1 = context.Game.Where(dbgame => dbgame.Id == game.Id);
                 var ele1 = ans1.ToArray().ElementAt(0);
 
+                var ans2 = context.User.Where(dbuser => dbuser.Id == user.Id);
+                var ele2 = ans2.ToArray().ElementAt(0);
+
                 var gameEvent = new GameEvent();
                 gameEvent.Game = ele1;
-                gameEvent.ActionDescription = status;
+                gameEvent.Status = status;
+                gameEvent.User = ele2;
                 gameEvent.Time = DateTime.Now;
+                gameEvent.Notation = notation;
 
                 context.GameEvent.Add(gameEvent);
                 context.SaveChanges();

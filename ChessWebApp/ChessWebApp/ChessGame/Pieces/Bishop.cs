@@ -1,6 +1,7 @@
 ﻿using ChessWebApp.ChessGame;
 using ChessWebApp.ChessGame.Pieces;
 using ChessWebApp.ChessGame.Pieces;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,8 @@ namespace ChessWebApp.ChessGame.Pieces
         public Bishop(ChessPlayer owner) : base(owner)
         {
         }
+
+        public override char NotationName => 'B';
 
         public override List<Tuple<int, int, ChessBoardScenario>> GetMovesWithScenarios(IFigure[,] board)
         {

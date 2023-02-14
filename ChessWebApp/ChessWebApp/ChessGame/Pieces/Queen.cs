@@ -26,6 +26,8 @@ namespace ChessWebApp.ChessGame.Pieces
         {
         }
 
+        public override char NotationName => 'Q';
+
         public override List<Tuple<int, int, ChessBoardScenario>> GetMovesWithScenarios(IFigure[,] board)
         {
             List<Tuple<int, int, ChessBoardScenario>> toRet = new List<Tuple<int, int, ChessBoardScenario>> ();

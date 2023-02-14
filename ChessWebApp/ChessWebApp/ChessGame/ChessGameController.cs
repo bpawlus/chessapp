@@ -19,8 +19,8 @@ namespace ChessWebApp.ChessGame
 {
     public class ChessGameController
     {
-        private readonly char[] _boardRowNames = { '1', '2', '3', '4', '5', '6', '7', '8' };
-        private readonly char[] _boardColNames = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
+        public static readonly char[] BoardRowNames = { '1', '2', '3', '4', '5', '6', '7', '8' };
+        public static readonly char[] BoardColNames = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H' };
         public static readonly int ChessboardSize = 8;
         public ChessBoardScenario CurrentScenario;
         public ChessPlayer TopPlayer { get; }
@@ -98,7 +98,6 @@ namespace ChessWebApp.ChessGame
             var data = WSMessageHandler.GetGameChessboardData(CurrentScenario.ChessboardScenario);
             HandleMessageGameBoard(TopPlayer, data);
             HandleMessageGameBoard(BottomPlayer, data);
-            GameFinder.AddBoardStatus(Game, NotCurrentPlayer.User.Id+" "+data[6..]);
 
             _scenarios = CurrentScenario.GetAllTruePlayerMoves(CurrentPlayer);
 
@@ -106,13 +105,17 @@ namespace ChessWebApp.ChessGame
             {
                 if (CurrentScenario.IsCheckScenario(CurrentPlayer))
                 {
+                    CurrentScenario.AppendToNotation("#");
                     Conclude("Checkmate", NotCurrentPlayer, CurrentPlayer);
                 }
                 else
                 {
+                    CurrentScenario.AppendToNotation("X");
                     Conclude("Stalemate", NotCurrentPlayer, CurrentPlayer);
                 }
             }
+
+            GameFinder.AddBoardStatus(Game, data[6..], NotCurrentPlayer.User, CurrentScenario.GetNotation());
         }
 
         public void HandleMessageGameBoard(ChessPlayer player, string data)

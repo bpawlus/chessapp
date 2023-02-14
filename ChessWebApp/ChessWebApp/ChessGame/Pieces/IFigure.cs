@@ -9,6 +9,11 @@ namespace ChessWebApp.ChessGame.Pieces
 {
     public interface IFigure
     {
+        public char NotationName
+        {
+            get;
+        }
+
         public short FigureId
         {
             get; set;

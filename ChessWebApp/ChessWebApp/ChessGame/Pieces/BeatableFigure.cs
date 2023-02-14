@@ -18,6 +18,11 @@ namespace ChessWebApp.ChessGame.Pieces
         protected short _figureId;
         public short FigureId { get => _figureId; set => _figureId = value; }
 
+        public abstract char NotationName
+        {
+            get;
+        }
+
         public abstract List<Tuple<int, int, ChessBoardScenario>> GetMovesWithScenarios(IFigure[,] board);
 
         public Tuple<int, int> FindMe(IFigure[,] board)

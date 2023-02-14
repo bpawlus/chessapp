@@ -40,6 +40,18 @@ namespace ChessWebApp.Data
                 .OnDelete(DeleteBehavior.NoAction)
                 .IsRequired(false);
 
+                user
+                .HasMany(a => a.Comments)
+                .WithOne(b => b.User)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
+
+                user
+                .HasMany(a => a.GameEvents)
+                .WithOne(b => b.User)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+
                 user.HasIndex(x => x.Name).IsUnique(true);
 
                 user.Property(p => p.Admin).HasDefaultValue(false);
@@ -72,10 +84,19 @@ namespace ChessWebApp.Data
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
             });
+
+            modelBuilder.Entity<GameEvent>(gameevent => {
+                gameevent
+                .HasMany(a => a.GameEventComments)
+                .WithOne(b => b.GameEvent)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
+            });
         }
 
         public DbSet<GameEvent> GameEvent { get; set; }
         public DbSet<User> User { get; set; }
         public DbSet<Game> Game { get; set; }
+        public DbSet<GameEventComment> GameEventComment { get; set; }
     }
 }

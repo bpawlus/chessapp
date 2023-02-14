@@ -27,6 +27,8 @@ namespace ChessWebApp.ChessGame.Pieces
         {
         }
 
+        public override char NotationName => 'P';
+
         public override List<Tuple<int, int, ChessBoardScenario>> GetMovesWithScenarios(IFigure[,] board)
         {
             List<Tuple<int, int, ChessBoardScenario>> toRet = new List<Tuple<int, int, ChessBoardScenario>> ();
@@ -96,6 +98,7 @@ namespace ChessWebApp.ChessGame.Pieces
                             {
                                 IFigure figure = new Queen(Owner);
                                 scenario.ChessboardScenario[rows[m], cols[m]] = figure;
+                                scenario.AppendToNotation("=H");
                             }
                             toRet.Add(new Tuple<int, int, ChessBoardScenario>(rows[m], cols[m], scenario));
                         }

@@ -1,0 +1,24 @@
+﻿.chessboardField {
+    width: 50px;
+    height: 50px;
+}
+
+.chessboardFieldLabel {
+    background-color: black;
+    color: white;
+}
+
+.chessboardFieldOdd {
+    background-color: #F9E79F;
+    color: black;
+}
+
+.chessboardFieldEven {
+    background-color: #641E16;
+    color: white;
+}
+
+.chessboard {
+    margin-left: auto;
+    margin-right: auto;
+}
