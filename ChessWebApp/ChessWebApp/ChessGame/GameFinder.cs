@@ -40,7 +40,7 @@ namespace ChessWebApp.ChessGame
             using (var context = new MvcGameContext(_connectionSettings))
             {
                 var ans1 = context.Game.Where(e => e.PlayerWinner != null && e.PlayerWinner.Id == user.Id).Count();
-                if (ans1 >= count)
+                if (ans1 >= count || user.Admin)
                 {
                     return true;
                 }

@@ -559,6 +559,7 @@ namespace ChessWebApp.Controllers
             return Unauthorized();
         }
 
+        [HttpPost]
         public async Task<IActionResult> EditGame(List<AdminGameDto> gamesDto)
         {
             var userid = HttpContext.Session.GetInt32(SessionUserId);
