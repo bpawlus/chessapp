@@ -1,6 +1,5 @@
 ﻿using ChessWebApp.ChessGame;
 using ChessWebApp.ChessGame.Pieces;
-using ChessWebApp.ChessGame.Pieces;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;

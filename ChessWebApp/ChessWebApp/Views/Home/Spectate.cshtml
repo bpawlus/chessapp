@@ -1,0 +1,53 @@
+﻿@model IEnumerable<ChessWebApp.Models.GameSpectateDto>
+
+
+@{
+    ViewData["Title"] = "Spectate Ongoing Games";
+}
+
+
+<div class="d-flex bd-highlight bg-dark text-white border-bottom box-shadow mb-3">
+    <div class="p-2 flex-grow-1 bd-highlight">Chess - Web App - <a class="btn-outline-secondary" asp-area="" asp-controller="Home" asp-action="Spectate">Spectate</a></div>
+    <div class="p-2 bd-highlight"><a class="btn-outline-secondary" asp-area="" asp-controller="Home" asp-action="Login">Return</a></div>
+</div>
+<div class="text-center">
+    <h1 class="display-16">Spectate games:</h1>
+
+    <table class="w-75 mx-auto text-center">
+        <thead>
+            <tr>
+                <th>
+                    Black figures Player
+                </th>
+                <th>
+                    White figures Player
+                </th>
+                <th>
+                    Game start
+                </th>
+                <th>
+                    Spectate
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr class="alert alert-dark">
+                    <td class="p-2">
+                        @Html.DisplayFor(modelItem => item.PlayerTopName)
+                    </td>
+                    <td class="p-2">
+                        @Html.DisplayFor(modelItem => item.PlayerBottomName)
+                    </td>
+                    <td class="p-2">
+                        @Html.DisplayFor(modelItem => item.TimeStart)
+                    </td>
+                    <td class="p-2">
+                        <a asp-action="SpectateSummary" asp-route-gameid="@item.Id" class="btn btn-primary" method="get">Spectate Game</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

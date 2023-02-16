@@ -14,42 +14,14 @@ namespace ChessWebApp.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+
             modelBuilder.Entity<User>(user =>
             {
-                user
-                .HasMany(a => a.GamesTop)
-                .WithOne(b => b.PlayerTop)
-                .OnDelete(DeleteBehavior.NoAction)
-                .IsRequired(false);
-
-                user
-                .HasMany(a => a.GamesBottom)
-                .WithOne(b => b.PlayerBottom)
-                .OnDelete(DeleteBehavior.NoAction)
-                .IsRequired(false);
-
-                user
-                .HasMany(a => a.GamesWon)
-                .WithOne(b => b.PlayerWinner)
-                .OnDelete(DeleteBehavior.NoAction)
-                .IsRequired(false);
-
-                user
-                .HasMany(a => a.GamesLost)
-                .WithOne(b => b.PlayerLoser)
-                .OnDelete(DeleteBehavior.NoAction)
-                .IsRequired(false);
-
                 user
                 .HasMany(a => a.Comments)
                 .WithOne(b => b.User)
                 .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);
-
-                user
-                .HasMany(a => a.GameEvents)
-                .WithOne(b => b.User)
-                .OnDelete(DeleteBehavior.NoAction)
                 .IsRequired(false);
 
                 user.HasIndex(x => x.Name).IsUnique(true);
@@ -79,14 +51,50 @@ namespace ChessWebApp.Data
 
             modelBuilder.Entity<Game>(game => {
                 game
+                .HasOne(a => a.PlayerTop)
+                .WithMany(b => b.GamesTop)
+                .HasForeignKey(g => g.PlayerTopId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+
+                game
+                .HasOne(b => b.PlayerBottom)
+                .WithMany(b => b.GamesBottom)
+                .HasForeignKey(g => g.PlayerBottomId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+
+                game
+                .HasOne(b => b.PlayerWinner)
+                .WithMany(b => b.GamesWon)
+                .HasForeignKey(g => g.PlayerWinnerId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+
+                game
+                .HasOne(b => b.PlayerLoser)
+                .WithMany(b => b.GamesLost)
+                .HasForeignKey(g => g.PlayerLoserId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .IsRequired(false);
+
+                game
                 .HasMany(a => a.GameEvents)
                 .WithOne(b => b.Game)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
             });
 
-            modelBuilder.Entity<GameEvent>(gameevent => {
-                gameevent
+
+           modelBuilder.Entity<GameEvent>(gameevent => {
+               gameevent
+                .HasOne(a => a.User)
+                .WithMany(b => b.GameEvents)
+                .HasForeignKey(g => g.UserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+               gameevent
                 .HasMany(a => a.GameEventComments)
                 .WithOne(b => b.GameEvent)
                 .OnDelete(DeleteBehavior.Cascade)
@@ -98,5 +106,6 @@ namespace ChessWebApp.Data
         public DbSet<User> User { get; set; }
         public DbSet<Game> Game { get; set; }
         public DbSet<GameEventComment> GameEventComment { get; set; }
+        public DbSet<AllowedPiece> AllowedPiece { get; set; }
     }
 }

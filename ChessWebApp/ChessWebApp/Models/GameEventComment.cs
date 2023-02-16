@@ -9,7 +9,6 @@ namespace ChessWebApp.Models
         public GameEvent? GameEvent { get; set; }
         [ForeignKey("UserId")]
         public User? User { get; set; }
-        [ForeignKey("UserId")]
-        public string Comment { get; set; }
+        public string? Comment { get; set; }
     }
 }

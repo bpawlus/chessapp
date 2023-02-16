@@ -12,7 +12,7 @@ namespace ChessWebApp.Models
         public string Notation { get; set; }
         public DateTime? Time { get; set; }
         public ICollection<GameEventComment>? GameEventComments { get; set; }
-        [ForeignKey("UserId")]
+        public int? UserId { get; set; }
         public User? User { get; set; }
     }
 }

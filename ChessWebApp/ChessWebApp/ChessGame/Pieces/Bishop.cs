@@ -1,6 +1,5 @@
 ﻿using ChessWebApp.ChessGame;
 using ChessWebApp.ChessGame.Pieces;
-using ChessWebApp.ChessGame.Pieces;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;

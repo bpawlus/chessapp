@@ -34,6 +34,13 @@ namespace ChessWebApp.ChessGame
         {
             Game = GameFinder.AddGame(topPlayer, bottomPlayer);
 
+            TopPlayer = CurrentPlayer = topPlayer;
+            BottomPlayer = NotCurrentPlayer = bottomPlayer;
+        }
+
+        public void Start()
+        {
+
             IFigure[,] chessboard = new IFigure[ChessboardSize, ChessboardSize];
             for (int i = 0; i < ChessboardSize; i++)
             {
@@ -45,36 +52,33 @@ namespace ChessWebApp.ChessGame
 
             for (int i = 0; i < 8; i++)
             {
-                chessboard[1, i] = topPlayer.PawnFigures[i];
-                chessboard[6, i] = bottomPlayer.PawnFigures[i];
+                chessboard[1, i] = TopPlayer.PawnFigures[i];
+                chessboard[6, i] = BottomPlayer.PawnFigures[i];
             }
 
-            chessboard[0, 0] = topPlayer.RookFigures[0];
-            chessboard[7, 0] = bottomPlayer.RookFigures[0];
+            chessboard[0, 0] = TopPlayer.RookFigures[0];
+            chessboard[7, 0] = BottomPlayer.RookFigures[0];
 
-            chessboard[0, 7] = topPlayer.RookFigures[1];
-            chessboard[7, 7] = bottomPlayer.RookFigures[1];
+            chessboard[0, 7] = TopPlayer.RookFigures[1];
+            chessboard[7, 7] = BottomPlayer.RookFigures[1];
 
-            chessboard[0, 1] = topPlayer.KnightFigures[0];
-            chessboard[7, 1] = bottomPlayer.KnightFigures[0];
+            chessboard[0, 1] = TopPlayer.KnightFigures[0];
+            chessboard[7, 1] = BottomPlayer.KnightFigures[0];
 
-            chessboard[0, 6] = topPlayer.KnightFigures[1];
-            chessboard[7, 6] = bottomPlayer.KnightFigures[1];
+            chessboard[0, 6] = TopPlayer.KnightFigures[1];
+            chessboard[7, 6] = BottomPlayer.KnightFigures[1];
 
-            chessboard[0, 2] = topPlayer.BishopFigures[0];
-            chessboard[7, 2] = bottomPlayer.BishopFigures[0];
+            chessboard[0, 2] = TopPlayer.BishopFigures[0];
+            chessboard[7, 2] = BottomPlayer.BishopFigures[0];
 
-            chessboard[0, 5] = topPlayer.BishopFigures[1];
-            chessboard[7, 5] = bottomPlayer.BishopFigures[1];
+            chessboard[0, 5] = TopPlayer.BishopFigures[1];
+            chessboard[7, 5] = BottomPlayer.BishopFigures[1];
 
-            chessboard[0, 3] = topPlayer.QueenFigure;
-            chessboard[7, 3] = bottomPlayer.QueenFigure;
+            chessboard[0, 3] = TopPlayer.QueenFigure;
+            chessboard[7, 3] = BottomPlayer.QueenFigure;
 
-            chessboard[0, 4] = topPlayer.KingFigure;
-            chessboard[7, 4] = bottomPlayer.KingFigure;
-
-            TopPlayer = CurrentPlayer = topPlayer;
-            BottomPlayer = NotCurrentPlayer = bottomPlayer;
+            chessboard[0, 4] = TopPlayer.KingFigure;
+            chessboard[7, 4] = BottomPlayer.KingFigure;
 
             HandleMessageGameStartPosition();
 
@@ -106,16 +110,19 @@ namespace ChessWebApp.ChessGame
                 if (CurrentScenario.IsCheckScenario(CurrentPlayer))
                 {
                     CurrentScenario.AppendToNotation("#");
+                    GameFinder.AddBoardStatus(this, data[6..], NotCurrentPlayer.User, CurrentScenario.GetNotation());
                     Conclude("Checkmate", NotCurrentPlayer, CurrentPlayer);
+                    return;
                 }
                 else
                 {
                     CurrentScenario.AppendToNotation("X");
+                    GameFinder.AddBoardStatus(this, data[6..], NotCurrentPlayer.User, CurrentScenario.GetNotation());
                     Conclude("Stalemate", NotCurrentPlayer, CurrentPlayer);
+                    return;
                 }
             }
-
-            GameFinder.AddBoardStatus(Game, data[6..], NotCurrentPlayer.User, CurrentScenario.GetNotation());
+            GameFinder.AddBoardStatus(this, data[6..], NotCurrentPlayer.User, CurrentScenario.GetNotation());
         }
 
         public void HandleMessageGameBoard(ChessPlayer player, string data)

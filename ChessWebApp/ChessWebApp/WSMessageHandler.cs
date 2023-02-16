@@ -93,7 +93,6 @@ namespace ChessWebApp
         public static Tuple<bool, int, int> HandleGameGetMoveMessage(string message)
         {
             bool correct = false;
-            string reason = "";
             int row = -1;
             int col = -1;
 
@@ -116,7 +115,6 @@ namespace ChessWebApp
         public static Tuple<bool> HandleGameGiveUpMessage(string message)
         {
             bool correct = false;
-            string reason = "";
 
             string filter = @"GM GO";
             Regex rg = new Regex(filter);
@@ -132,7 +130,6 @@ namespace ChessWebApp
         public static Tuple<bool> HandleGameOppDetMessage(string message)
         {
             bool correct = false;
-            string reason = "";
 
             string filter = @"GM ED";
             Regex rg = new Regex(filter);
@@ -142,6 +139,25 @@ namespace ChessWebApp
                 correct = true;
             }
             return new Tuple<bool>(correct);
+        }
+
+        public static Tuple<bool, int> HandleSpectateMessage(string message)
+        {
+            bool correct = false;
+            int gameid = -1;
+
+            string filter = @"SPEC:(\d*)";
+            Regex rg = new Regex(filter);
+            MatchCollection mc = Regex.Matches(message, filter);
+            if (mc.Count == 1)
+            {
+                foreach (Match match in mc)
+                {
+                    correct = true;
+                    gameid = Int32.Parse(match.Groups[1].Value);
+                }
+            }
+            return new Tuple<bool, int>(correct, gameid);
         }
 
         public static Tuple<bool, string> HandleExit(string message)

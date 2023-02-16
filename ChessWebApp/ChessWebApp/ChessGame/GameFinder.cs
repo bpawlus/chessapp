@@ -1,4 +1,5 @@
-﻿using ChessWebApp.Data;
+﻿using ChessWebApp.ChessGame.Pieces;
+using ChessWebApp.Data;
 using ChessWebApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,9 +15,42 @@ namespace ChessWebApp.ChessGame
 {
     public static class GameFinder
     {
-        private static Dictionary<int, WebSocket> queuedSockets = new Dictionary<int, WebSocket>();
-        private static Dictionary<int, ChessGameController> games = new Dictionary<int, ChessGameController>();
+        public static Dictionary<ChessGameController, HashSet<WebSocket>> GamesSpectate = new Dictionary<ChessGameController, HashSet<WebSocket>>();
+        private static Dictionary<int, WebSocket> _queuedSockets = new Dictionary<int, WebSocket>();
+        private static Dictionary<int, ChessGameController> _games = new Dictionary<int, ChessGameController>();
         private static DbContextOptions<MvcGameContext> _connectionSettings;
+        public static Dictionary<string, Func<User, bool>> Conditions = new Dictionary<string, Func<User, bool>>()
+        {
+            { "Wins5", Wins5 },
+            { "Wins10", Wins10 }
+        };
+
+        private static bool Wins5(User user)
+        {
+            return WinCount(user, 5);
+        }
+
+        private static bool Wins10(User user)
+        {
+            return WinCount(user, 10);
+        }
+
+        private static bool WinCount(User user, int count)
+        {
+            using (var context = new MvcGameContext(_connectionSettings))
+            {
+                var ans1 = context.Game.Where(e => e.PlayerWinner != null && e.PlayerWinner.Id == user.Id).Count();
+                if (ans1 >= count)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
+
+
+
 
         public static Game AddGame(ChessPlayer topPlayer, ChessPlayer bottomPlayer)
         {
@@ -40,11 +74,11 @@ namespace ChessWebApp.ChessGame
             }
         }
 
-        public static GameEvent AddBoardStatus(Game game, string status, User user, string notation)
+        public static GameEvent AddBoardStatus(ChessGameController cgc, string status, User user, string notation)
         {
             using (var context = new MvcGameContext(_connectionSettings))
             {
-                var ans1 = context.Game.Where(dbgame => dbgame.Id == game.Id);
+                var ans1 = context.Game.Where(dbgame => dbgame.Id == cgc.Game.Id);
                 var ele1 = ans1.ToArray().ElementAt(0);
 
                 var ans2 = context.User.Where(dbuser => dbuser.Id == user.Id);
@@ -60,6 +94,12 @@ namespace ChessWebApp.ChessGame
                 context.GameEvent.Add(gameEvent);
                 context.SaveChanges();
 
+                int usertop = user == cgc.TopPlayer.User ? -1 : 1;
+                foreach (var entry in GamesSpectate[cgc])
+                {
+                    WSMessageHandler.SendAsync(entry, "ISTOP:" + usertop + " STATUS:" + status + " NOTATION:" + notation);
+                }
+
                 return gameEvent;
             }
         }
@@ -71,9 +111,9 @@ namespace ChessWebApp.ChessGame
 
         public static Tuple<ChessGameController, ChessPlayer> FindGameOf(User user)
         {
-            if(games.ContainsKey(user.Id))
+            if(_games.ContainsKey(user.Id))
             {
-                var controller = games[user.Id];
+                var controller = _games[user.Id];
                 if (controller.TopPlayer.User.Id == user.Id)
                 {
                     return new Tuple<ChessGameController, ChessPlayer>(controller, controller.TopPlayer);
@@ -90,8 +130,9 @@ namespace ChessWebApp.ChessGame
         {
             using (var context = new MvcGameContext(_connectionSettings))
             {
-                games.Remove(controller.TopPlayer.User.Id);
-                games.Remove(controller.BottomPlayer.User.Id);
+                _games.Remove(controller.TopPlayer.User.Id);
+                _games.Remove(controller.BottomPlayer.User.Id);
+                GamesSpectate.Remove(controller);
 
                 var ans = context.Game.Where(dbgame => dbgame.Id == controller.Game.Id);
                 var game = ans.ToArray().ElementAt(0);
@@ -123,15 +164,25 @@ namespace ChessWebApp.ChessGame
 
         public static void Queue(User user, WebSocket webSocket)
         {
-            queuedSockets.Add(user.Id, webSocket);
+            _queuedSockets.Add(user.Id, webSocket);
         }
 
         public static void Unqueue(User user)
         {
-            if (queuedSockets.ContainsKey(user.Id))
+            if (_queuedSockets.ContainsKey(user.Id))
             {
-                queuedSockets.Remove(user.Id);
+                _queuedSockets.Remove(user.Id);
             }
+        }
+
+        public static void AddSpectator(ChessGameController cgc, WebSocket webSocket)
+        {
+            GamesSpectate[cgc]?.Add(webSocket);
+        }
+
+        public static void RemoveSpectator(ChessGameController cgc, WebSocket webSocket)
+        {
+            GamesSpectate[cgc]?.Remove(webSocket);
         }
 
         public static async Task HostGameIfPossible()
@@ -143,17 +194,17 @@ namespace ChessWebApp.ChessGame
                 try
                 {
                     
-                    if (queuedSockets.Count >= 2)
+                    if (_queuedSockets.Count >= 2)
                     {
                         using (var context = new MvcGameContext(_connectionSettings))
                         {
-                            var playerSocket1 = queuedSockets.First();
-                            queuedSockets.Remove(playerSocket1.Key);
+                            var playerSocket1 = _queuedSockets.First();
+                            _queuedSockets.Remove(playerSocket1.Key);
                             var ans1 = context.User.Where(dbuser => dbuser.Id == playerSocket1.Key);
                             var ele1 = ans1.ToArray().ElementAt(0);
 
-                            var playerSocket2 = queuedSockets.First();
-                            queuedSockets.Remove(playerSocket2.Key);
+                            var playerSocket2 = _queuedSockets.First();
+                            _queuedSockets.Remove(playerSocket2.Key);
                             var ans2 = context.User.Where(dbuser => dbuser.Id == playerSocket2.Key);
                             var ele2 = ans2.ToArray().ElementAt(0);
 
@@ -182,8 +233,10 @@ namespace ChessWebApp.ChessGame
                             await WSMessageHandler.SendAsync(playerSocket2.Value, messageTo2);
 
                             var newGame = new ChessGameController(playerTop, playerBot);
-                            games.Add(playerTop.User.Id, newGame);
-                            games.Add(playerBot.User.Id, newGame);
+                            _games.Add(playerTop.User.Id, newGame);
+                            _games.Add(playerBot.User.Id, newGame);
+                            GamesSpectate.Add(newGame, new HashSet<WebSocket>());
+                            newGame.Start();
                         }
                     }
                 }

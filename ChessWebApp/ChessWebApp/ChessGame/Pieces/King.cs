@@ -1,6 +1,5 @@
 ﻿using ChessWebApp.ChessGame;
 using ChessWebApp.ChessGame.Pieces;
-using ChessWebApp.ChessGame.Pieces;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -106,7 +105,7 @@ namespace ChessWebApp.ChessGame.Pieces
                     ChessBoardScenario scenario = new ChessBoardScenario(board, this);
                     scenario.MoveScenario(ipos, jpos, ipos, jpos - 2);
                     scenario.MoveScenario(ipos, 0, ipos, jpos - 1);
-                    scenario.SetCustomNotation("O-O");
+                    scenario.SetCustomNotation("O-O-O");
 
                     toRet.Add(new Tuple<int, int, ChessBoardScenario>(ipos, jpos - 2, scenario));
                 }
@@ -119,7 +118,7 @@ namespace ChessWebApp.ChessGame.Pieces
                     ChessBoardScenario scenario = new ChessBoardScenario(board, this);
                     scenario.MoveScenario(ipos, jpos, ipos, jpos + 2);
                     scenario.MoveScenario(ipos, 7, ipos, jpos + 1);
-                    scenario.SetCustomNotation("O-O-O");
+                    scenario.SetCustomNotation("O-O");
 
                     toRet.Add(new Tuple<int, int, ChessBoardScenario>(ipos, jpos + 2, scenario));
                 }

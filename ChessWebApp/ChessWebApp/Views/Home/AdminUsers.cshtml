@@ -1,0 +1,78 @@
+﻿@model List<AdminUserDto>
+
+@{
+    ViewData["Title"] = "Admin Panel - Users";
+}
+
+<div class="d-flex bd-highlight bg-dark text-white border-bottom box-shadow mb-3">
+    <div class="p-2 flex-grow-1 bd-highlight">Chess - Web App - <a class="btn-outline-secondary" asp-area="" asp-controller="Home" asp-action="Spectate">Spectate</a></div>
+    <div class="p-2 bd-highlight">
+        <form asp-controller="Home" asp-action="Index" method="post">
+            <input id="index" type="submit" value="Return to Profile" class="btn-secondary" />
+        </form>
+    </div>
+    <div class="p-2 bd-highlight">
+        <form asp-controller="Home" asp-action="Logout" method="post">
+            <input id="logout" type="submit" value="Logout" class="btn-secondary" />
+        </form>
+    </div>
+</div>
+
+<div class="text-center">
+    <h1 class="display-16">Manage users:</h1>
+    <form asp-controller="Home" asp-action="EditUser" method="post">
+        <table class="w-100 mx-auto text-center">
+            <thead>
+                <tr>
+                    <th>
+                        ID
+                    </th>
+                    <th>
+                        Name
+                    </th>
+                    <th>
+                        Desciption
+                    </th>
+                    <th>
+                        Admin
+                    </th>
+                    <th>
+                        Delete
+                    </th>
+                </tr>
+            </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {   
+                        <tr class="alert alert-dark">
+                            <th>
+                                <input type="hidden" asp-for="@Model[i].Id" />
+                                @Model[i].Id
+                            </th>
+                            <th>
+                                <input type="hidden" asp-for="@Model[i].Name" />
+                                @Model[i].Name
+                            </th>
+                            <th>
+                                <input asp-for=@Model[i].Description type="text" value=@Model[i].Description>
+                            </th>
+                            <th>
+                                @if (Model[i].Admin)
+                                {
+                                    <input type="checkbox" asp-for="@Model[i].Admin" checked>
+                                }
+                                else
+                                {
+                                    <input type="checkbox" asp-for="@Model[i].Admin">
+                                }
+                            </th>
+                            <th>
+                                <input type="checkbox" asp-for="@Model[i].MarkForDel">
+                            </th>
+                        </tr>
+                    }
+                </tbody>
+        </table>
+        <input id="save" type="submit" value="Save changes" class="btn btn-primary w-50" />
+    </form>
+</div>

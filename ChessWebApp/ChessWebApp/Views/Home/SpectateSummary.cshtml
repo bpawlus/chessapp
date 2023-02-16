@@ -1,0 +1,194 @@
+﻿@model List<ChessWebApp.Models.GameEventDto>
+
+
+@{
+    ViewData["Title"] = "Spectate";
+    char[] boardRowNames = @ViewBag.boardRowNames;
+    char[] boardColNames = @ViewBag.boardColNames;
+    int chessboardSize = @ViewBag.chessboardSize;
+    bool odd = false;
+}
+
+<script type="text/javascript">
+    var pictures = @Html.Raw(Json.Serialize(@ViewBag.pictures));
+
+    function ReloadChessboard(status) {
+        for (let row = 0; row < @chessboardSize; row++) {
+            for (let col = 0; col < @chessboardSize; col++) {
+                field = document.getElementById("f" + row + col).src = "";
+            }
+        }
+        const regex = new RegExp(" ");
+        const split = status.split(regex);
+        split.forEach((pair) => {
+            const regex2 = new RegExp(",");
+            const digits = pair.split(regex2);
+            if (digits != "") {
+                fig = digits[0];
+                row = digits[1];
+                col = digits[2];
+                field = document.getElementById("f" + row + col).src = "/resources/" + pictures[fig];
+            }
+        })
+    }
+
+    function ws() {
+        const exampleSocket = new WebSocket("wss://" + window.location.host + "/wsspectate");
+        exampleSocket.onmessage = (event) => {
+            var ans = event.data.match("ISTOP:(.*) STATUS:(.*) NOTATION:(.*)");
+            
+            if(ans) {
+                var istop = parseInt(ans[1]);
+                if(istop == -1) {
+                    document.getElementById("status").innerHTML +=
+                            `<div class="container justify-content-between text-center">
+                                    <div class="border border-dark m-1 row btn-outline-dark" onclick="ReloadChessboard('${ans[2]}');" style="height: 50px;">
+                                    <div class="col-4 align-self-center">
+                                            <div class="mx-auto align-center border border-dark" style=" height: 30px;width: 30px;background-color:black;"></div>
+                                    </div>
+                                    <div class="col-8 align-self-center">
+                                        ${ans[3]}
+                                    </div>
+                                </div>
+                            </div>`
+                }
+                else if(istop == 1)
+                {
+                    document.getElementById("status").innerHTML +=
+                        `<div class="container justify-content-between text-center">
+                                        <div class="border border-dark m-1 row btn-outline-dark" onclick="ReloadChessboard('${ans[2]}');" style="height: 50px;">
+                                        <div class="col-4 align-self-center">
+                                                <div class="mx-auto align-center border border-dark" style=" height: 30px;width: 30px;background-color:white;"></div>
+                                        </div>
+                                        <div class="col-8 align-self-center">
+                                            ${ans[3]}
+                                        </div>
+                                    </div>
+                                </div>`
+                }
+                ReloadChessboard(`${ans[2]}`);
+            }
+        }
+        exampleSocket.onclose = (event) => {
+            
+        }
+        exampleSocket.onerror = (event) => {
+            console.log("WS Connection error:" + event.data);
+        }
+        exampleSocket.onopen = (event) => {
+            exampleSocket.send("SPEC:"+@ViewBag.gameid);
+        }
+    }
+
+    window.onload = function () {
+        ReloadChessboard('@Model[Model.Count() - 1].Status');
+        ws();
+    }
+</script>
+
+<div class="d-flex bd-highlight bg-dark text-white border-bottom box-shadow mb-3">
+    <div class="p-2 flex-grow-1 bd-highlight">Chess - Web App - <a class="btn-outline-secondary" asp-area="" asp-controller="Home" asp-action="Spectate">Spectate</a></div>
+    <div class="p-2 bd-highlight"><a class="btn-outline-secondary" asp-area="" asp-controller="Home" asp-action="Login">Return</a></div>
+</div>
+
+<h1 class="text-center display-16">Game preview:</h1>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg text-center">
+            <table class="chessboard">
+                <tbody>
+                    <tr>
+                        <th class="chessboardField chessboardFieldLabel">
+
+                        </th>
+                        @for (int i = 0; i < chessboardSize; i++)
+                        {
+                            <th class="chessboardField chessboardFieldLabel">
+                                @boardColNames[i]
+                            </th>
+                        }
+                        <th class="chessboardField chessboardFieldLabel">
+
+                        </th>
+                    </tr>
+
+                    @for (int i = 0; i < chessboardSize; i++)
+                    {
+                        <tr>
+                            <th class="chessboardField chessboardFieldLabel">
+                                @boardRowNames[i]
+                            </th>
+                            @for (int j = 0; j < chessboardSize; j++)
+                            {
+                                @if (odd)
+                                {
+                                    <th class="chessboardField chessboardFieldOdd">
+                                        <img id="f@(i)@(j)" style="width:100%; display:block; margin-left:auto; margin-right:auto" />
+                                    </th>
+                                    ;
+                                }
+                                else
+                                {
+                                    <th class="chessboardField chessboardFieldEven">
+                                        <img id="f@(i)@(j)" style="width:100%; display:block; margin-left:auto; margin-right:auto" />
+                                    </th>
+                                    ;
+                                }
+
+                                odd = !odd;
+                            }
+                            <th class="chessboardField chessboardFieldLabel">
+                                @boardRowNames[i]
+                            </th>
+                        </tr>
+                        odd = !odd;
+                    }
+
+                    <tr>
+                        <th class="chessboardField chessboardFieldLabel">
+
+                        </th>
+                        @for (int i = 0; i < chessboardSize; i++)
+                        {
+                            <th class="chessboardField chessboardFieldLabel">
+                                @boardColNames[i]
+                            </th>
+                        }
+                        <th class="chessboardField chessboardFieldLabel">
+
+                        </th>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-lg">
+            <p class="link-dark text-decoration-none border-bottom">
+                Game Moves:
+            </p>
+                <div class="overflow-auto border-bottom" id="status" style="height: 400px;">
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        <div class="container justify-content-between text-center">
+                            <div class="border border-dark m-1 row btn-outline-dark" onclick="ReloadChessboard('@Model[i].Status');" style="height: 50px;">
+                                <div class="col-4 align-self-center">
+                                    @if (@Model[i].IsTop)
+                                    {
+                                        <div class="mx-auto align-center border border-dark" style=" height: 30px;width: 30px;background-color:black;"></div>
+                                    }
+                                    else
+                                    {
+                                        <div class="mx-auto align-center border border-dark" style=" height: 30px;width: 30px;background-color:white;"></div>
+                                    }
+                                </div>
+                                <div class="col-8 align-self-center">
+                                    @Model[i].Notation
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+        </div>
+    </div>
+</div>

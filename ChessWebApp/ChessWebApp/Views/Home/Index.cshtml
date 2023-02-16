@@ -27,7 +27,7 @@
 
 
 <div class="d-flex bd-highlight bg-dark text-white border-bottom box-shadow mb-3">
-    <div class="p-2 flex-grow-1 bd-highlight">Chess - Web App</div>
+    <div class="p-2 flex-grow-1 bd-highlight">Chess - Web App - <a class="btn-outline-secondary" asp-area="" asp-controller="Home" asp-action="Spectate">Spectate</a></div>
     <div class="p-2 bd-highlight"> 
         <form asp-controller="Home" asp-action="Logout" method="post">
             <input id="logout" type="submit" value="Logout" class="btn-secondary" />
@@ -228,3 +228,13 @@
 
     <a asp-action="UserGames" asp-route-userid=@Model.Id class="btn btn-primary" method="get">Show recent games</a>
 </div>
+
+@if (Model.Admin)
+{
+    <div class="text-center mt-4">
+        <a asp-action="AdminUsers" class="btn btn-primary" method="get">Admin Panel - Users</a>
+    </div>
+    <div class="text-center mt-4">
+        <a asp-action="AdminGames" class="btn btn-primary" method="get">Admin Panel - Games</a>
+    </div>
+}

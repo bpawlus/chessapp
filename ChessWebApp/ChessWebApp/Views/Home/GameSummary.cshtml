@@ -1,4 +1,4 @@
-﻿@model IEnumerable<ChessWebApp.Models.GameEventDto>
+﻿@model List<ChessWebApp.Models.GameEventDto>
 
 
 @{
@@ -23,18 +23,22 @@
         split.forEach((pair) => {
             const regex2 = new RegExp(",");
             const digits = pair.split(regex2);
-
-            fig = digits[0];
-            row = digits[1];
-            col = digits[2];
-
-            field = document.getElementById("f" + row + col).src = "/resources/" + pictures[fig];
+            if (digits != "") {
+                fig = digits[0];
+                row = digits[1];
+                col = digits[2];
+                field = document.getElementById("f" + row + col).src = "/resources/" + pictures[fig];
+            }
         })
+    }
+
+    window.onload = function () {
+        ReloadChessboard('@Model[0].Status')
     }
 </script>
 
 <div class="d-flex bd-highlight bg-dark text-white border-bottom box-shadow mb-3">
-    <div class="p-2 flex-grow-1 bd-highlight">Chess - Web App</div>
+    <div class="p-2 flex-grow-1 bd-highlight">Chess - Web App - <a class="btn-outline-secondary" asp-area="" asp-controller="Home" asp-action="Spectate">Spectate</a></div>
     <div class="p-2 bd-highlight">
         <form asp-controller="Home" asp-action="Index" method="post">
             <input id="index" type="submit" value="Return to Profile" class="btn-secondary" />
@@ -118,29 +122,36 @@
             <p class="link-dark text-decoration-none border-bottom">
                 Game Moves:
             </p>
-            <div class="overflow-auto border-bottom" style="height: 400px;">
-                @foreach (var item in Model)
-                {
-                    <div class="container justify-content-between text-center">
-                        <div class="border border-dark m-1 row btn-outline-dark" onclick="ReloadChessboard('@item.Status');" style="height: 50px;">
-                            <div class="col-2 align-self-center">
-                                @if(item.IsTop) {
-                                    <div class="mx-auto align-center border border-dark" style=" height: 30px;width: 30px;background-color:black;"></div>
-                                }
-                                else {
-                                    <div class="mx-auto align-center border border-dark" style=" height: 30px;width: 30px;background-color:white;"></div>
-                                }
-                            </div>
-                            <div class="col-4 align-self-center">
-                                @item.Notation
-                            </div>
-                            <div class="col-6 align-self-center">
-                                <input type="text" value=@item.GameEventComment?.Comment>
+            <form asp-controller="Home" asp-action="SaveComments" asp-route-gameid="@ViewBag.gameid" method="post">
+                <div class="overflow-auto border-bottom" style="height: 400px;">
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        <input type="hidden" asp-for="@Model[i].Id" />
+                        <input type="hidden" asp-for="@Model[i].GameId" />
+                        <div class="container justify-content-between text-center">
+                            <div class="border border-dark m-1 row btn-outline-dark" onclick="ReloadChessboard('@Model[i].Status');" style="height: 50px;">
+                                <div class="col-2 align-self-center">
+                                    @if (@Model[i].IsTop)
+                                    {
+                                        <div class="mx-auto align-center border border-dark" style=" height: 30px;width: 30px;background-color:black;"></div>
+                                    }
+                                    else
+                                    {
+                                        <div class="mx-auto align-center border border-dark" style=" height: 30px;width: 30px;background-color:white;"></div>
+                                    }
+                                </div>
+                                <div class="col-4 align-self-center">
+                                    @Model[i].Notation
+                                </div>
+                                <div class="col-6 align-self-center">
+                                    <input asp-for=@Model[i].Comment type="text" value=@Model[i].Comment>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                }
-            </div>
+                    }
+                </div>
+                <input id="save" type="submit" value="Save Comments" class="btn btn-primary w-100" />
+            </form>
         </div>
     </div>
 </div>

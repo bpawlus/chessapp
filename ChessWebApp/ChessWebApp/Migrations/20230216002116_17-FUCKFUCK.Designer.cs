@@ -4,6 +4,7 @@ using ChessWebApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChessWebApp.Migrations
 {
     [DbContext(typeof(MvcGameContext))]
-    partial class MvcUserContextModelSnapshot : ModelSnapshot
+    [Migration("20230216002116_17-FUCKFUCK")]
+    partial class _17FUCKFUCK
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -266,22 +269,22 @@ namespace ChessWebApp.Migrations
                     b.HasOne("ChessWebApp.Models.User", "PlayerBottom")
                         .WithMany("GamesBottom")
                         .HasForeignKey("PlayerBottomId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ChessWebApp.Models.User", "PlayerLoser")
                         .WithMany("GamesLost")
                         .HasForeignKey("PlayerLoserId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ChessWebApp.Models.User", "PlayerTop")
                         .WithMany("GamesTop")
                         .HasForeignKey("PlayerTopId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ChessWebApp.Models.User", "PlayerWinner")
                         .WithMany("GamesWon")
                         .HasForeignKey("PlayerWinnerId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("PlayerBottom");
 
@@ -302,7 +305,7 @@ namespace ChessWebApp.Migrations
                     b.HasOne("ChessWebApp.Models.User", "User")
                         .WithMany("GameEvents")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Game");
 
